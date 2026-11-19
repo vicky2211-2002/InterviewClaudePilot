@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Shortcut } from './Keycap';
 
 interface Row {

@@ -223,3 +223,7 @@ Groq `whisper-large-v3-turbo` for speech, Gemini Flash only if you need vision.
 endpoints using keys stored in the local settings file. Model availability,
 free limits, and pricing change — always re-check with the in-app **Test**
 button before an interview.*
+
+---
+
+**Verification (v1.0.1, Nov 2026):** endpoints below are third-party configurations - verify keys/models in-app with the Test button. Offline, `tools/mock_provider.cjs` verifies streaming + vision paths; the full 3-round x 10-question mock interview passes (30/30 streamed answers, Nov 2026). Live paid-model verification remains user-side.

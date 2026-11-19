@@ -1,4 +1,4 @@
-﻿# Install / Update Guide — InterviewClaudePilte
+# Install / Update Guide — InterviewClaudePilte
 
 > **InterviewClaudePilte** is an independent, clean-room reimplementation of the
 > workflow pioneered by [InterviewFury](https://interviewfury.com/) (its FuryModule
@@ -10,9 +10,9 @@
 > included.
 >
 > Historical note: this guide was adapted from the upstream **InterviewCopilot**
-> project. Version numbers referenced below (up to v1.2.8) and verification
+> project. Version numbers referenced below (up to v1.2.9) and verification
 > results describe the upstream baseline; this project keeps its own version line
-> (`package.json`, currently `1.0.0`). Where the upstream docs mentioned a
+> (`package.json`, currently `1.0.1`). Where the upstream docs mentioned a
 > prebuilt installer, note that this repo does not ship one — build your own with
 > `npm run package`.
 
@@ -77,7 +77,7 @@ The `/S` flag runs the NSIS installer silently. The app installs to
 
 ---
 
-## 3. Update an existing install (e.g., v1.0.0 → the current version, upstream baseline v1.2.8)
+## 3. Update an existing install (e.g., v1.0.0 → the current version, upstream baseline v1.2.9)
 
 1. **Close the running app** (same command as section 1).
 2. Run the new installer (either with UI or silently):
@@ -89,7 +89,7 @@ The `/S` flag runs the NSIS installer silently. The app installs to
 3. Your settings and models are preserved — the installer only overwrites program files.
 4. Launch the app and confirm **footer/version** shows the new version and that your saved custom models are still present in **Settings → API**.
 
-> **Note (upstream InterviewCopilot baseline — v1.1.0 through v1.2.8):** v1.1.0 added the transcription provider switch (Local/API), v1.1.1 verified both providers end‑to‑end, v1.2.0 adds **saved transcription endpoints** (add / edit / use / delete multiple STT APIs in Settings → API → Transcription), and v1.2.1 makes the overlay undetectable to cursor tracking (plain arrow cursor everywhere, no hand/pointer/I-beam changes over invisible widgets) and sanitizes provider errors so no API key can appear in the UI. v1.2.2 replaces every native hover tooltip (e.g. "Click to open dashboard") with in-page ones hidden by the capture protection — native OS tooltips were visible on screen shares. v1.2.3 adds a Screen vision toggle + optional vision model in Settings, and automatically falls back to a text-only answer when a model rejects screenshots (e.g. vLLM without --enable-multimodal). v1.2.4 makes Ctrl+H confirm each captured screenshot with a toast (“Screenshot captured (n/5)”) and toasts at startup if a global shortcut could not register (e.g. another app claimed it) — previously both were silent. v1.2.5 adds the same confirmation toast to Ctrl+Delete (“Screenshot deleted (n left)” / “No screenshots to delete”) — the shortcut and the in-app delete now share one code path. v1.2.6 changes Ctrl+←/→ horizontal movement from a hardcoded ±400 px to a dynamic ±25% of the screen work-area width, and clamps any stored legacy offset at startup. v1.2.7 reverts the v1.2.6 movement change at the user’s request — Ctrl+←/→ is back to the hardcoded ±400 px with no startup clamp; the ±25%-of-screen dynamic cap is retired. v1.2.8 fixes horizontal movement for real: the renderer used CSS `padding-left`, which cannot go negative, so Ctrl+← never rendered (only Ctrl+→ worked). The overlay now slides via `transform: translateX` with a 120 ms transition, and the travel limit is ±75% of the screen work-area width in both directions. The installer picks up the updated renderer automatically. Upgrading from ≤ v1.1.x seeds your existing flat API configuration (e.g. the Groq `whisper-large-v3` setup) into a saved profile named `whisper-large-v3` on first launch — nothing is lost.
+> **Note (upstream InterviewCopilot baseline — v1.1.0 through v1.2.9):** v1.1.0 added the transcription provider switch (Local/API), v1.1.1 verified both providers end‑to‑end, v1.2.0 adds **saved transcription endpoints** (add / edit / use / delete multiple STT APIs in Settings → API → Transcription), and v1.2.1 makes the overlay undetectable to cursor tracking (plain arrow cursor everywhere, no hand/pointer/I-beam changes over invisible widgets) and sanitizes provider errors so no API key can appear in the UI. v1.2.2 replaces every native hover tooltip (e.g. "Click to open dashboard") with in-page ones hidden by the capture protection — native OS tooltips were visible on screen shares. v1.2.3 adds a Screen vision toggle + optional vision model in Settings, and automatically falls back to a text-only answer when a model rejects screenshots (e.g. vLLM without --enable-multimodal). v1.2.4 makes Ctrl+H confirm each captured screenshot with a toast (“Screenshot captured (n/5)”) and toasts at startup if a global shortcut could not register (e.g. another app claimed it) — previously both were silent. v1.2.5 adds the same confirmation toast to Ctrl+Delete (“Screenshot deleted (n left)” / “No screenshots to delete”) — the shortcut and the in-app delete now share one code path. v1.2.6 changes Ctrl+←/→ horizontal movement from a hardcoded ±400 px to a dynamic ±25% of the screen work-area width, and clamps any stored legacy offset at startup. v1.2.7 reverts the v1.2.6 movement change at the user’s request — Ctrl+←/→ is back to the hardcoded ±400 px with no startup clamp; the ±25%-of-screen dynamic cap is retired. v1.2.8 fixes horizontal movement for real: the renderer used CSS `padding-left`, which cannot go negative, so Ctrl+← never rendered (only Ctrl+→ worked). The overlay now slides via `transform: translateX` with a 120 ms transition, and the travel limit is ±75% of the screen work-area width in both directions. The installer picks up the updated renderer automatically. Upgrading from ≤ v1.1.x seeds your existing flat API configuration (e.g. the Groq `whisper-large-v3` setup) into a saved profile named `whisper-large-v3` on first launch — nothing is lost.
 
 ---
 
@@ -98,13 +98,22 @@ The `/S` flag runs the NSIS installer silently. The app installs to
 ### Smoke test (recommended)
 ```powershell
 Start-Process "$env:LOCALAPPDATA\Programs\InterviewClaudePilte\InterviewClaudePilte.exe" -ArgumentList "--remote-debugging-port=9228"
-Start-Sleep -Seconds 5
-node tools/cdp_smoke.cjs 9228 out=verify
+Start-Sleep -Seconds 15   # Whisper model load takes a few seconds; watch for "[Whisper] ready"
 ```
-Expect:
-* `nodes: 182` (or thereabouts) — figure from the upstream InterviewCopilot baseline; expect a similar but not necessarily identical count
-* Inner text contains "InterviewClaudePilte", "All Commands", "Settings", "API"
-* Screenshot saved to `out/verify/01_home.png`
+Expect the app log to show `[Whisper] ready` and `overlay window created` (run the exe
+from a console or check `%TEMP%\*.log` if you redirect output). For an automated
+interaction check, run this repo's CDP tool against it:
+
+```powershell
+node tools/cdp_check_screenshot_limit.cjs 9228   # asserts the 10-shot capture cap; Ctrl+H path
+```
+
+For a full end-to-end answer-pipeline check (no paid key required), see
+`tools/mock_provider.cjs` + `tools/cdp_mock_interview.cjs` (3 rounds x 10 questions,
+30/30 streamed answers verified Nov 2026).
+(upstream InterviewCopilot also ships `cdp_smoke.cjs`, `cdp_audio_e2e.cjs`,
+`cdp_test_apis.cjs`, `cdp_test_profiles.cjs`, `cdp_check_capture.cjs`, `cdp_check_move.cjs`
+-- not ported to this repository yet.)
 
 ### Manual check
 * Command bar is visible at top of screen
@@ -147,7 +156,7 @@ npm run package
 #  electron-builder's default: <productName> Setup <version>.<ext>)
 ```
 
-Version is controlled by `package.json` → `"version"` (currently `1.0.0` — bump as needed).
+Version is controlled by `package.json` → `"version"` (currently `1.0.1` — bump as needed).
 
 ---
 
@@ -161,7 +170,7 @@ Version is controlled by `package.json` → `"version"` (currently `1.0.0` — b
 | User settings | `%APPDATA%\interviewclaudepilte\interview-claudepilte-settings.json` |
 | Whisper models | `%APPDATA%\interviewclaudepilte\whisper-models\` (downloaded on demand) |
 | Temp audio | `%TEMP%\interview-claudepilte-whisper\` |
-| Tools | `tools/cdp_smoke.cjs`, `tools/cdp_audio_e2e.cjs`, `tools/mock_provider.cjs`, `tools/make_speech.ps1`, `tools/win_visible.ps1`, `tools/cdp_test_apis.cjs`, `tools/cdp_test_profiles.cjs`, `tools/cdp_check_capture.cjs`, `tools/cdp_check_move.cjs`, `tools/cdp_mock_interview.cjs` |
+| Tools | `tools/cdp_check_screenshot_limit.cjs`, `tools/mock_provider.cjs`, `tools/cdp_mock_interview.cjs` (this repo; upstream also ships smoke/audio/API/profile/capture/move — not ported) |
 | Git remote | https://github.com/vicky2211-2002/InterviewClaudePilot |
 
 ---
@@ -177,9 +186,10 @@ Start-Process "C:\path\to\InterviewClaudePilte Setup <version>.exe" -ArgumentLis
 
 # Launch with debug port for smoke test
 Start-Process "$env:LOCALAPPDATA\Programs\InterviewClaudePilte\InterviewClaudePilte.exe" -ArgumentList "--remote-debugging-port=9228"
+Start-Sleep -Seconds 15
 
-# Smoke test
-node tools/cdp_smoke.cjs 9228 out=verify
+# Smoke test (screenshot-cap tool — see Section 4)
+node tools/cdp_check_screenshot_limit.cjs 9228
 
 # Backup settings
 Copy-Item "$env:APPDATA\interviewclaudepilte\interview-claudepilte-settings.json" "$env:TEMP\ic-backup.json"

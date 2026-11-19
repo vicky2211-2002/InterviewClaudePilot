@@ -96,4 +96,8 @@ That's it — save happens automatically as you type/paste.
 (`src/main/ai/AIProviderManager.ts`, `buildSystemPrompt()` — injected as
 `CANDIDATE INSTRUCTIONS (follow strictly):`). Character count of the block
 above: 1,489 (excluding the outer code fences). Verified against the upstream
-InterviewCopilot build (v1.2.8).*
+InterviewCopilot build (v1.2.9).*
+
+---
+
+**Verification (v1.0.1, Nov 2026):** this prompt ships in Settings -> Instructions and is prepended to every AI request; the full pipeline (Instructions -> ask -> streamed answer) is exercised end-to-end by `tools/cdp_mock_interview.cjs` + `tools/mock_provider.cjs` - 30/30 streamed answers OK.

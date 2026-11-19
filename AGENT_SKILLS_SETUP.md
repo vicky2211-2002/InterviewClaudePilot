@@ -783,3 +783,7 @@ Select a role to activate:
 
 *Generated for the InterviewClaudePilte project - 2026-11-18 (adapted from the upstream InterviewCopilot project's skill catalog)*
 *Current stack addendum (this project): Electron 28 + React 18 + Tailwind 3 + Vite 5 + esbuild; single-installer NSIS packaging; whisper.cpp Base model bundled; OpenAI-compatible custom-provider architecture; IPC contract between main/preload/renderer with byte-identical types (`src/shared/types.ts` ↔ `src/preload/types.ts`). See ENGINEERING_GUIDE.md for full update playbook.*
+
+---
+
+**Verification (v1.0.1, Nov 2026):** describes the agent/tooling environment used to build and verify this repo; see README -> Verification status for the v1.0.1 results (10-screenshot cap, coach bridge RTT, 30/30 mock interview).

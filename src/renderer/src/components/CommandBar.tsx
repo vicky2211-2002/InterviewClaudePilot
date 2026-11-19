@@ -1,5 +1,36 @@
 import React from 'react';
-import { Mic, Shield } from 'lucide-react';
+import { Mic } from 'lucide-react';
+
+/** App logo: gradient "IC" tile — replaces the old shield. */
+export function IcLogo({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="ic-tile" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#7c6cf0" />
+          <stop offset="1" stopColor="#06b6d4" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="22" height="22" rx="6.2" fill="url(#ic-tile)" />
+      <text
+        x="11.1"
+        y="15"
+        textAnchor="middle"
+        fontFamily="Inter, Segoe UI, sans-serif"
+        fontWeight={800}
+        fontSize="8.6"
+        letterSpacing="0.6"
+        fill="#ffffff"
+      >
+        IC
+      </text>
+      <polygon
+        points="18.7,3.1 19.15,4.6 20.65,5.05 19.15,5.5 18.7,7 18.25,5.5 16.75,5.05 18.25,4.6"
+        fill="#67e8f9"
+      />
+    </svg>
+  );
+}
 
 interface CommandBarProps {
   listening: boolean;
@@ -37,7 +68,7 @@ export function CommandBar({
         data-tip="Click to open dashboard"
         className="tip grid h-[34px] w-[34px] place-items-center rounded-full bg-white text-[#0c0c0e] transition hover:bg-white/90"
       >
-        <Shield className="h-[17px] w-[17px]" strokeWidth={2.2} />
+        <IcLogo size={19} />
       </button>
 
       <button type="button" onClick={onAnswer} className="chrome-btn" disabled={busy}>

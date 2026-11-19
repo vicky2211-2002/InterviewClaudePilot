@@ -1,4 +1,4 @@
-﻿# InterviewClaudePilte â€” Engineering Guide
+# InterviewClaudePilte â€” Engineering Guide
 
 > **InterviewClaudePilte** is an independent, clean-room reimplementation of the
 > workflow pioneered by [InterviewFury](https://interviewfury.com/) (its FuryModule
@@ -12,7 +12,7 @@
 > Historical note: this guide was adapted from the upstream **InterviewCopilot**
 > project. Section 4 and section 8 document how the reference app was inspected
 > during the upstream project â€” they are kept as process documentation. Version
-> history and verification results in this guide (through v1.2.8) describe the
+> history and verification results in this guide (through v1.2.9) describe the
 > upstream baseline; this project keeps its own version line (`package.json`) and
 > adds the InterviewClaudePilte-specific features listed in Â§1.
 
@@ -361,7 +361,7 @@ the invisible overlay during a screen share â€” a viewer sees a plain deskt
 cursor at all times. Clicks and text selection still work.
 
 **Tooltip stealth (v1.2.2):** every native HTML `title` attribute is gone
-(`CommandBar` shield/mic, answer/chat copy & close, dashboard account & close,
+(`CommandBar` IC-logo/mic, answer/chat copy & close, dashboard account & close,
 saved-model/profile URLs). Hover hints use `.tip[data-tip]` CSS tooltips
 rendered **inside** the page â€” the capture protection covers them, so a
 screen-share viewer never sees them (native Chromium tooltips are separate,
@@ -532,12 +532,18 @@ Expected: `transcripts: ["interviewer: â€¦"]` with no phantom `candidate: yo
 
 ### 7.4 AI paths without a paid key
 
+(upstream InterviewCopilot baseline; this repo ships its own copies —
+`tools/mock_provider.cjs` and `tools/cdp_mock_interview.cjs`.)
+
 ```powershell
-Start-Process node -ArgumentList "tools/mock_provider.cjs"   # http://127.0.0.1:8787
+Start-Process node -ArgumentList "tools/mock_provider.cjs","8787"   # http://127.0.0.1:8787
 ```
 
 In the app's **API** tab use base URL `http://127.0.0.1:8787/v1`, key `mock-key`,
-model `mock-model`. Then click **Answer**, **Analyse Screen**, and **Chat** â€” the
+model `mock-model`. Register it as a **custom model** (Settings → API → Custom
+Models), not as a bare `selectedModel`: the startup model picker drops any
+`selectedModel` that is not an available id (`custom:<id>`), clearing a bare
+name to `""`. Then click **Answer**, **Analyse Screen**, and **Chat** — the
 mock logs `{stream, hasImage, model}` per request, proving streaming and vision.
 
 ### 7.5 Window show/hide
@@ -563,21 +569,26 @@ selection path without touching the user's Groq configuration.
 ### 7.7 Screenshot capture, overlay movement, mock interview
 
 ```powershell
-node tools/cdp_check_capture.cjs 9228  # Ctrl+H capture pipeline (same main-process captureScreen())
-node tools/cdp_check_move.cjs 9228     # Ctrl+â†/â†’ clamp: translateX both directions, Â±75% of the
-                                       # work-area width (v1.2.8); restores windowOffsetX afterwards
-node tools/cdp_mock_interview.cjs 9228 # 10 mock questions (HR/technical/behavioral) via
-                                       # ask(mode:'chat') through the real configured model
+node tools/cdp_check_screenshot_limit.cjs 9228   # this repo: 12 synthetic captures, 10 stick, tray restored
+node tools/cdp_mock_interview.cjs 9228           # this repo: full 3-round x 10-question mock interview
 ```
 
-`cdp_check_capture.cjs` exercises the same `captureScreen()` the Ctrl+H
-shortcut uses, so a passing run means the shortcut's capture path works.
-`cdp_check_move.cjs` nudges `move-x` far past both limits and asserts the
-clamp is symmetric and the stored offset is restored afterwards.
+(upstream also ships `cdp_check_capture.cjs` / `cdp_check_move.cjs` -- not ported yet;
+the limit tool above covers the capture cap, and movement clamping is unchanged
+from the upstream baseline.)
+
 `cdp_mock_interview.cjs` replays a full mock interview against the model and
-endpoint configured in the app and prints answers + latency; set
-`SAVE_REPORT=1` to also write `mock_interview_report.md` in the repo root
-(that file is not committed).
+endpoint configured in the app and prints answers + latency per question.
+The InterviewClaudePilte harness asks **30 questions -- 3 rounds x 10**
+(Round 1 HR/intro, Round 2 technical, Round 3 behavioral & close) via
+ask(mode:'chat'). Latest verified run (Nov 2026, against tools/mock_provider.cjs):
+**30/30 streamed answers OK**, ~3.4-4.7 s each, 0 errors, 0 empty; provider log
+shows 30 x POST /v1/chat/completions with stream: true. Any question that fails
+or streams an empty answer flips the exit code to 1. To seed the mock endpoint,
+add a `customModels` entry (id `mock-model`, baseURL `http://127.0.0.1:8787/v1`,
+key `mock-key`) and set `selectedModel` to `custom:mock-model`; a bare
+`selectedModel` is dropped to "" on launch by the startup model picker.
+Restore the previous settings byte-identically afterwards.
 
 ### 7.8 Regression checklist
 
@@ -658,6 +669,43 @@ is immune to capture protection because it reads the renderer's own surface).
 - User agent from CDP `/json/version` gives `Chrome/<x> Electron/<y>`.
 - `icudtl.dat` / `v8_context_snapshot.bin` confirm Electron.
 - `app-update.yml` (if present) reveals the publisher/feed.
+
+### 8.6 Reference inspection: FuryModule-Setup-1.2.12-x64.exe (Nov 2026 — static only)
+
+InterviewClaudePilte was validated against a freshly downloaded
+`FuryModule-Setup-1.2.12-x64.exe` (InterviewFury's own installer). The work was
+**static inspection of the installer on disk; the installer was never executed**,
+and **no FuryModule code, assets, or strings were copied into this project**.
+Everything below is metadata visible without running the app:
+
+- NSIS-3 (Unicode) installer, PE32, `FileVersion 1.2.12`, `CompanyName
+  InterviewFury`, description "Audio module helper.", copyright 2026.
+  It embeds `$PLUGINSDIR\app-64.7z` (~120 MB) plus the uninstaller and NSIS
+  plugins.
+- `app-64.7z` is a standard Electron distribution; the app itself lives in
+  `resources/app.asar` (~2.25 MB) and ships `electron-updater` with a **generic
+  provider** pointing at `https://interviewfury.com/updates/`, and
+  `resources/app-update.yml` names the publisher `CN=Vinay Kumar Vanapalli`.
+- The asar's own `package.json` lists `name: fury-module`, `version: 1.2.12`,
+  `main: main-win.js`, `description: Audio module helper.` — i.e. a **thin
+  shell whose intelligence is server-side** (the UI is loaded remotely from
+  interviewfury.com), exactly the architecture Section 4 describes for the
+  upstream InterviewHelpAI reference app.
+- Bundled third-party pieces visible in the asar include `electron-updater`
+  (with a code-signature verifier), Inter (same open font this project uses),
+  a `soundcheck.wav`, a token-entry page and a set of small `lib/*.js` helpers
+  with their `*.test.mjs` companions.
+- Conclusion for this project: there is **nothing local to port** — the
+  feature set is remote. InterviewClaudePilte stays an independent,
+  clean-room implementation; the inspection only confirmed product/version
+  identification and the shell's architecture (transparent, always-on-top,
+  remote-configured). Temporary extraction directories used during the
+  inspection were deleted afterwards and none of their contents are in this
+  repository.
+- Tooling note: [morluto/rea](https://github.com/morluto/rea) (MIT) was
+  reviewed as a candidate MCP reverse-engineering toolkit. It was **not
+  needed** here — `7z` + Node's `@electron/asar` covered the static analysis —
+  so nothing was installed or configured.
 
 ---
 

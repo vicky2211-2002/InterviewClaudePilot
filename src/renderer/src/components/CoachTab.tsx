@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Copy, Check, Radio, Users, Timer, RefreshCw, ShieldCheck, Play, Square } from 'lucide-react';
+import { Copy, Check, Radio, Users, Timer, RefreshCw, Play, Square } from 'lucide-react';
 import QRCode from 'qrcode';
 import { BridgeStatus } from '@shared/bridge';
 import { Settings } from '@shared/types';
@@ -150,7 +150,7 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-emerald-800">
-                  <ShieldCheck className="h-4 w-4" /> Live — waiting for your coach
+                  <Radio className="h-4 w-4" /> Live — waiting for your coach
                 </div>
                 <div className="mt-2 flex items-center gap-2">
                   <code className="block w-full truncate rounded-md border border-emerald-200 bg-white px-3 py-2 text-[13px] text-gray-800">

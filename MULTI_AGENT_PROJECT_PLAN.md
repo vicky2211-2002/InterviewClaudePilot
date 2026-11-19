@@ -1,4 +1,4 @@
-﻿# Multi-Agent Project Plan: InterviewClaudePilte Exact Replica
+# Multi-Agent Project Plan: InterviewClaudePilte Exact Replica
 
 > **InterviewClaudePilte** is an independent, clean-room reimplementation of the
 > workflow pioneered by [InterviewFury](https://interviewfury.com/) (its FuryModule
@@ -12,12 +12,12 @@
 > Historical note: this is a historical document from the upstream
 > **InterviewCopilot** project. All version numbers, shipped-status claims and
 > dates in it describe the upstream baseline; InterviewClaudePilte carries its own
-> version line (`package.json`, currently `1.0.0`). Documentation adapted from the
+> version line (`package.json`, currently `1.0.1`). Documentation adapted from the
 > upstream project.
 
 **Project:** InterviewClaudePilte - Exact replica of interviewhelpai.com with customizations  
 **Date:** 2026-11-18  
-**Status:** HISTORICAL (upstream InterviewCopilot baseline) — planned/shipped as v1.0.0 (verified, pushed). Current upstream release is **v1.2.8** (v1.2.0 saved transcription APIs; v1.2.1 cursor stealth + sanitized provider errors; v1.2.2 in-page tooltips hidden from screen share; v1.2.3 screen-vision toggle + optional vision model + automatic text-only fallback; v1.2.4 Ctrl+H toast feedback + startup shortcut warning; v1.2.5 Ctrl+Delete toast; v1.2.8 horizontal movement fixed via translateX — Ctrl+←/→ now work both ways, ±75% of the screen); see `INSTALL_UPDATE.md` § 9 and `ENGINEERING_GUIDE.md` for current state  
+**Status:** HISTORICAL (upstream InterviewCopilot baseline) — planned/shipped as v1.0.0 (verified, pushed); v1.0.1 ports the upstream v1.2.9 screenshot cap and passes a full 3-round x 10-question mock interview (30/30). Current upstream release is **v1.2.9** (v1.2.0 saved transcription APIs; v1.2.1 cursor stealth + sanitized provider errors; v1.2.2 in-page tooltips hidden from screen share; v1.2.3 screen-vision toggle + optional vision model + automatic text-only fallback; v1.2.4 Ctrl+H toast feedback + startup shortcut warning; v1.2.5 Ctrl+Delete toast; v1.2.8 horizontal movement fixed via translateX — Ctrl+←/→ now work both ways, ±75% of the screen); see `INSTALL_UPDATE.md` § 9 and `ENGINEERING_GUIDE.md` for current state  
 **Reference:** `AGENT_SKILLS_SETUP.md` for agent definitions
 
 ---  
@@ -44,9 +44,9 @@ All phases completed. The repository now contains:
 * A **rebuilt Electron overlay app** (`InterviewClaudePilte`) that matches the reference app’s layout and behavior.
 * **Full QA verification scripts** (`tools/`) for CDP smoke, audio/e2e tests, mock provider, win visibility, etc.
 * **Documentation:** `README.md`, `ENGINEERING_GUIDE.md`, updated `CLAUDE.md`, this plan (shipped), `AGENT_SKILLS_SETUP.md` (has addendum).
-* **Installer built** (`release/InterviewClaudePilte Setup 1.0.0.exe`, ~212 MB — upstream InterviewCopilot baseline build).
+* **Installer built** (`release/InterviewClaudePilte Setup 1.0.1.exe`, ~212 MB). Full mock interview passes end-to-end (3 rounds x 10 questions, 30/30 streamed answers via the real ask pipeline against a local mock provider, Nov 2026).
 
-**Next steps for maintainers:** run the verification scripts, test the packaged build, update model bundles only via lazy downloads (no >100 MB commits).
+**Status (Nov 2026):** verification scripts run; packaged build smoke-launched (Whisper ready); full 3x10 mock interview passes; update model bundles only via lazy downloads (no >100 MB commits).
 
 *This plan is archived. New work goes into feature PRs, not this document.*
 

@@ -1,4 +1,4 @@
-﻿# InterviewClaudePilte
+# InterviewClaudePilte
 
 ## What is this?
 
@@ -31,7 +31,7 @@ a dark chat bar, and an answer card — not a browser page.
 | Chat with AI | `Ctrl+Alt+Enter` | Opens the chat bar (optional "Use Screen" toggle for vision models) |
 | Reset Context | `Ctrl+R` | Clears transcript, screenshots, answers, and chat |
 | Start / Stop Listening | `Ctrl+Shift+L` | Toggles live transcription |
-| Take Screenshot | `Ctrl+H` | Manual capture; each press shows a toast confirming the shot was captured (attach more than one for multi-screen problems) |
+| Take Screenshot | `Ctrl+H` | Manual capture; each press shows a toast confirming the shot was captured (keeps the newest 10) |
 | Delete Last Screenshot | `Ctrl+Delete` | Removes the newest screenshot from context (toast confirms) |
 | Show / Hide App | `Ctrl+\` | Hides the overlay completely; press again to bring it back |
 | Move App | `Ctrl+←` / `Ctrl+→` | Slides the overlay horizontally — both directions, ±75% of the screen |
@@ -60,10 +60,17 @@ InterviewClaudePilte adds:
   latency (RTT), edit the transcript, and toggle auto-answer / tone / session
   controls remotely. The candidate sees the connected coaches and their RTT
   in the dashboard.
+- **(d) 10-screenshot context** — `Ctrl+H` keeps the newest **10** screenshots
+  for vision models (upstream kept 5); oldest are dropped past the cap, and
+  `Ctrl+Delete` removes the newest. The capture toast shows `n/10`.
+- **(e) Refreshed IC logo** — a gradient **IC** tile (replacing the old shield)
+  in the floating command bar. It is drawn inside the overlay window, so when
+  Ultra Undetectable Mode is on (default) it disappears from screen shares and
+  recordings together with everything else in the window.
 
 ## Configure the AI
 
-Open the dashboard (shield icon, or `Ctrl+\`), then the **API** tab. On first run
+Open the dashboard (IC logo in the command bar, or `Ctrl+\`), then the **API** tab. On first run
 this tab opens automatically.
 
 - **Custom API** — any OpenAI-compatible endpoint: base URL (for example
@@ -163,6 +170,30 @@ prompt). The build bundles `resources/whisper` (CLI + Base model) as extra
 resources; nothing else is downloaded at install time. (`npx electron-builder
 --win nsis` is the underlying command if you prefer calling it directly.)
 
+### Verification status (v1.0.1, Nov 2026)
+
+- `npm run build` (typecheck + bundles) is clean; renderer bundle contains the
+  IC logo and no shield assets.
+- `tools/cdp_check_screenshot_limit.cjs` passes: 10 captures stick, the
+  11th/12th are clipped, tray restored to empty (Ctrl+H context cap = 10).
+- **Full mock interview passes end-to-end** (`tools/cdp_mock_interview.cjs` +
+  `tools/mock_provider.cjs`): 3 rounds × 10 questions (HR/intro, technical,
+  behavioral & close) asked through the real `ask(mode: 'chat')` pipeline into
+  the OpenAI-compatible mock endpoint — **30/30 streamed answers**, ~3.4–4.7 s
+  each, 0 errors, 0 empty; provider log shows 30 × `POST /v1/chat/completions`
+  with `stream: true`. Settings restored byte-identically afterwards.
+- Live run: Whisper ready, overlay created, Coach Console HTTP 200, PIN
+  handshake, `pong` round-trip ~15–54 ms on LAN, wrong PIN rejected;
+  coach → candidate transcript add verified end-to-end over CDP.
+- Tabs (Commands / Transcript / Coach Console / Settings / API) render and
+  accept clicks; Ultra Undetectable Mode is on by default
+  (`undetectableMode` / `invisibleOnScreenShare` → `setContentProtection`).
+- **Not yet covered by automated tests:** real loopback audio transcription,
+  live answers against a paid endpoint, and actual invisibility inside a real
+  screen-sharing session — verify in your own meeting setup.
+- Global hotkeys are not available while InterviewCopilot (or any app that
+  claimed the same accelerators) is running — run one at a time.
+
 ### Layout
 
 ```
@@ -170,9 +201,13 @@ src/main/       Electron main process: overlay window, IPC, shortcuts, tray,
                 screenshots, answer orchestration
 src/main/ai/    Provider manager (OpenAI/Anthropic/Google/NVIDIA/custom, streaming + vision)
 src/main/whisper/  whisper.cpp wrapper (lazy model download, WAV wrapping, silence gate)
-src/preload/    contextBridge API (types.ts must stay identical to src/shared/types.ts)
+src/main/bridge/   LAN Coach Console hub (HTTP + WebSocket, PIN auth, RTT tracking)
+src/preload/    contextBridge API (types.ts re-exports src/shared/types.ts)
 src/renderer/   React + Tailwind overlay UI
 src/shared/     Shared types
+tools/          Verification tools (cdp_check_screenshot_limit.cjs: fires 12 synthetic captures, asserts the
+                10-shot cap, restores the tray; mock_provider.cjs + cdp_mock_interview.cjs: 3-round × 10-question
+                mock interview through the real ask pipeline)
 ```
 
 ### Settings location

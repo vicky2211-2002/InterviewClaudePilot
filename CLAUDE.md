@@ -1,4 +1,4 @@
-﻿# CLAUDE.md — Working brief for AI coding agents
+# CLAUDE.md — Working brief for AI coding agents
 
 > **InterviewClaudePilte** is an independent, clean-room reimplementation of the
 > workflow pioneered by [InterviewFury](https://interviewfury.com/) (its FuryModule
@@ -10,7 +10,7 @@
 > included.
 >
 > Historical note: this brief was adapted from the upstream **InterviewCopilot**
-> project. Version numbers and verification results below (through v1.2.8)
+> project. Version numbers and verification results below (through v1.2.9)
 > describe the upstream baseline; InterviewClaudePilte keeps its own version line
 > (see `package.json`). Documentation adapted from the upstream project; the
 > upstream project's own test history lives there.
@@ -25,6 +25,26 @@ resume-anchored), read [`INSTRUCTIONS.md`](./INSTRUCTIONS.md).
 **Status:** (upstream InterviewCopilot baseline) feature-complete rebuild;
 installer built and tested end-to-end in the upstream project (transcription,
 answer, screen analysis, chat, custom API, PDF resume, hide/restore). Version
+1.2.9 — Ctrl+H screenshot context cap raised 5 → **10**; `screenshots-update`
+now sends `{ count }` instead of re-sending the multi-MB base64 array (the
+renderer listener was a no-op; `Analyse Screen` still reads the array via
+`getScreenshots()`). Upstream verification: `tools/cdp_check_screenshot_limit.cjs`
+(fires 12 captures, asserts 10 stick, restores tray to empty) — ALL CHECKS PASS.
+Ported into InterviewClaudePilte for v1.0.1 (same tool in `tools/`, same cap) —
+re-verified in this repo (12 captures, 10 stick, tray restored).
+
+**InterviewClaudePilte v1.0.1 status (Nov 2026):** installer rebuilt and
+smoke-launched; renderer bundle carries the new IC logo (no shield);
+settings restore byte-identical after tests. Full mock interview passes
+end-to-end through the real ask pipeline: `tools/mock_provider.cjs` (mock
+OpenAI-compatible streaming endpoint) + `tools/cdp_mock_interview.cjs`
+(CDP) — 3 rounds × 10 questions (HR/intro, technical, behavioral & close),
+**30/30 streamed answers OK**, ~3.4–4.7 s each, 0 errors, provider log shows
+30 × `stream: true` chat completions. Seeding gotcha documented: the startup
+model picker requires `selectedModel` to match an available id
+(`custom:<id>`); a bare model name gets cleared to `""` on launch — seed a
+`customModels` entry instead.
+
 1.2.8 — transcription supports a selectable **Local
 (offline whisper.cpp)** or **API (OpenAI-compatible `/audio/transcriptions`)**
 provider. The API mode manages **multiple saved endpoints** (Settings → API →
@@ -97,19 +117,14 @@ npm run dev                 # source run (Vite + electron)
 npm run package             # installer -> release/InterviewClaudePilte Setup <ver>.exe
 ```
 
-Verification tools (app must run with `--remote-debugging-port=<port>`):
+Verification tools in this repo (app must run with `--remote-debugging-port=<port>`;
+upstream InterviewCopilot ships more tools — smoke/audio/API/profile/capture/move —
+that were not ported; use the commands below, or port them the same way if needed):
 
 ```powershell
-node tools/cdp_smoke.cjs 9223 out=screens     # screenshot + DOM/node count
-node tools/mock_provider.cjs                  # fake OpenAI endpoint on :8787
-powershell -File tools/make_speech.ps1        # real 16 kHz speech WAV for testing
-node tools/cdp_audio_e2e.cjs 9223 20000       # audio -> transcript assertions
-powershell -File tools/win_visible.ps1 -ProcessName InterviewClaudePilte   # hidden?
-node tools/cdp_test_apis.cjs 9224             # flip provider, test-transcription + test-model
-node tools/cdp_test_profiles.cjs 9224         # saved transcription profile add/switch/delete flows
-node tools/cdp_check_capture.cjs 9228         # Ctrl+H capture pipeline (same captureScreen() path)
-node tools/cdp_check_move.cjs 9228            # Ctrl+←/→ ±75% translateX clamp; restores windowOffsetX
-node tools/cdp_mock_interview.cjs 9228        # 10-question mock interview via ask(mode:'chat'); SAVE_REPORT=1 to keep the report
+node tools/cdp_check_screenshot_limit.cjs 9228   # Ctrl+H 10-screenshot cap: 12 synthetic captures, asserts 10 stick, restores tray
+node tools/mock_provider.cjs 8787                # fake OpenAI-compatible streaming endpoint on :8787 (logs each request as JSON lines)
+node tools/cdp_mock_interview.cjs 9228           # full 3-round × 10-question mock interview via ask(mode:'chat') — 30/30 streamed answers OK (Nov 2026)
 ```
 
 ---
