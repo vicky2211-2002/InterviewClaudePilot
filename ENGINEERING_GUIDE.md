@@ -53,12 +53,20 @@ InterviewClaudePilte additions on top of the original feature set:
   mis-heard segment can be corrected or dropped before it reaches the model.
 - **Custom API providers** â€” OpenAI-compatible endpoints are added, edited, and
   deleted from the dashboard (**Settings â†’ API**), no rebuild required.
-- **Coach Console** â€” a PIN-protected web page served over LAN (default port
+- **Coach Console** - a PIN-protected web page served over LAN (default port
   `47821`, e.g. `http://<your-pc-ip>:47821/`) for a friend/coach on the same
   Wi-Fi. They can watch the live transcript and streaming answers, send
   hints/chat, see the live connection latency (RTT), edit the transcript, and
   toggle auto-answer / tone / session controls remotely. The candidate sees
-  connected coaches and their RTT in the dashboard.
+  connected coaches and their RTT in the dashboard. In v1.0.2 the Coach tab
+  lists every detected LAN address, a `http://localhost:<port>/` self-test
+  hint, a router-isolation / mobile-data checklist, and a one-click **Allow
+  through Windows Firewall** button (elevated `netsh` private-profile rule via
+  the `allowBridgeFirewall` IPC; a UAC prompt is shown, manual fallback text is
+  included in the button result). Native HTML tooltips (`title=`) were
+  eliminated app-wide in v1.0.2 - they render above the capture-protected
+  overlay and are visible on screen shares; all tooltips are now in-page
+  capture-protected `data-tip` ones (renderer ships zero `title=` attrs).
 
 It is a clean-room reimplementation of the behavior and layout of a reference
 commercial app (`interviewhelpai-Windows.exe`, v1.3.5). No code was copied from
@@ -604,6 +612,29 @@ Restore the previous settings byte-identically afterwards.
 
 ---
 
+### 7.9 Coach Console connectivity (v1.0.2)
+
+Symptom: a phone on the same Wi-Fi scans the QR code but sits at "connecting...".
+
+Isolate server vs network: first load http://localhost:47821/ on THIS PC (must be
+HTTP 200 with the console brand) and check ws://<lan-ip>:47821/ws answers
+'welcome' with the shown PIN. Both passing means the bridge is healthy and the
+block is between phone and PC:
+
+1. Windows Defender Firewall silently drops inbound TCP 47821 for this app.
+   Fix from the app: Coach tab -> "Allow through Windows Firewall" (elevated netsh
+   private-profile rule, UAC prompt), or in an elevated PowerShell:
+   netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private
+2. Router AP/client isolation (common on guest Wi-Fi and some campus/hotspot
+   networks) blocks phone-to-PC traffic even on the same SSID. Fix: use the
+   phone's own hotspot or a non-guest network.
+3. Phone on mobile data - 5G/LTE cannot route to a private LAN address. Turn it off.
+
+Verified Nov 2026 (v1.0.2): bridge IPC start/stop OK, LAN HTTP 200 OK, WS PIN
+handshake OK (RTT ~11 ms from this machine), diagnostics UI renders in Coach tab,
+renderer contains zero native title= attributes. Note: the overlay deliberately does
+NOT send CORS headers, so cross-origin fetch() from the renderer to the console
+fails by design; the console page itself is same-origin and unaffected.
 ## 8. Reverse engineering an Electron app
 
 Use this to compare against any desktop app (including newer builds of the

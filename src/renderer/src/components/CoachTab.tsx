@@ -33,8 +33,10 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
   const [status, setStatus] = useState<BridgeStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState<'url' | 'pin' | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const [qr, setQr] = useState<string | null>(null);
+  const [fw, setFw] = useState<'idle' | 'busy' | 'ok' | 'fail'>('idle');
+  const [fwMsg, setFwMsg] = useState('');
   const [, setTick] = useState(0);
 
   // Poll the bridge every 2 s while the tab is open so coach RTTs stay live.
@@ -93,13 +95,30 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
     }
   };
 
-  const copyText = async (text: string, kind: 'url' | 'pin') => {
+  const copyText = async (text: string, kind: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
       window.setTimeout(() => setCopied(null), 1800);
     } catch {
       /* clipboard unavailable */
+    }
+  };
+
+  const allowFirewall = async () => {
+    setFw('busy');
+    setFwMsg('');
+    try {
+      const result = await window.electronAPI.allowBridgeFirewall();
+      if (result.ok) {
+        setFw('ok');
+      } else {
+        setFw('fail');
+        setFwMsg(result.error || 'Unknown error');
+      }
+    } catch (err) {
+      setFw('fail');
+      setFwMsg(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -192,6 +211,66 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
                   </p>
                 </div>
               </div>
+
+              {(status?.urls?.length ?? 0) > 1 && (
+                <div className="mt-3 border-t border-emerald-200 pt-3">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    Other addresses on this network
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {status!.urls
+                      .filter((u) => u !== status!.primaryUrl)
+                      .map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => void copyText(u, `alt:${u}`)}
+                          className="tip flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-emerald-300"
+                          data-tip="Copy address"
+                        >
+                          {copied === `alt:${u}` ? (
+                            <Check className="h-3 w-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="h-3 w-3 text-gray-400" />
+                          )}
+                          {u}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-[11.5px] leading-snug text-amber-900">
+                <div className="font-semibold">Phone shows &quot;connecting…&quot; forever?</div>
+                <ol className="mt-1 list-decimal space-y-0.5 pl-4">
+                  <li>
+                    On this PC open{' '}
+                    <code>http://localhost:{status?.port ?? 47821}/</code> — if it loads but the phone
+                    cannot, the Windows Firewall or your router is blocking it.
+                  </li>
+                  <li>
+                    Guest/hotspot Wi-Fi often blocks phone↔PC traffic (AP/client isolation). Try your
+                    phone&apos;s own hotspot, or a non-guest SSID.
+                  </li>
+                  <li>Turn off mobile data on the phone while using the console.</li>
+                  <li>Hotel/campus/CGNAT networks may block peer devices entirely.</li>
+                </ol>
+                <button
+                  type="button"
+                  disabled={fw === 'busy'}
+                  onClick={() => void allowFirewall()}
+                  className="tip mt-2 inline-flex items-center gap-2 rounded-md border border-amber-300 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                  data-tip="Adds an inbound private-profile Windows Firewall rule for this app (UAC prompt)"
+                >
+                  {fw === 'busy' ? 'Adding firewall rule…' : 'Allow through Windows Firewall'}
+                </button>
+                {fw === 'ok' && (
+                  <p className="mt-1.5 font-medium text-emerald-800">
+                    Firewall rule added. Reopen the console on the phone.
+                  </p>
+                )}
+                {fw === 'fail' && <p className="mt-1.5 break-words text-red-700">{fwMsg}</p>}
+              </div>
             </div>
           </div>
         )}
@@ -265,12 +344,12 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
                   key={t.id}
                   type="button"
                   onClick={() => onUpdate({ answerTone: t.id })}
-                  className={`rounded-md border px-2 py-1.5 text-[12px] font-medium transition ${
+                  className={`tip rounded-md border px-2 py-1.5 text-[12px] font-medium transition ${
                     tone === t.id
                       ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
                       : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   }`}
-                  title={t.hint}
+                  data-tip={t.hint}
                 >
                   {t.label}
                 </button>
@@ -293,8 +372,8 @@ export function CoachTab({ settings, onUpdate }: CoachTabProps) {
                 <button
                   type="button"
                   onClick={resetSession}
-                  className="flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1.5 text-[12px] font-medium text-gray-600 hover:bg-gray-50"
-                  title="Restart the timer"
+                  className="tip flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1.5 text-[12px] font-medium text-gray-600 hover:bg-gray-50"
+                  data-tip="Restart the timer"
                 >
                   <Timer className="h-3.5 w-3.5" /> Reset
                 </button>

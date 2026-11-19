@@ -76,6 +76,8 @@ const api = {
   getBridgeStatus: (): Promise<BridgeStatus> => ipcRenderer.invoke('getBridgeStatus'),
   startBridge: (): Promise<BridgeStatus> => ipcRenderer.invoke('startBridge'),
   stopBridge: (): Promise<BridgeStatus> => ipcRenderer.invoke('stopBridge'),
+  allowBridgeFirewall: (): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('allowBridgeFirewall'),
   sendCoachHint: (text: string) => ipcRenderer.send('sendCoachHint', text),
   sendCoachChat: (text: string) => ipcRenderer.send('sendCoachChat', text),
   onCoachHint: (callback: (text: string) => void) => subscribe('coach-hint', callback),

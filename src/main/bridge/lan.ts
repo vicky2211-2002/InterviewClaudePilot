@@ -18,6 +18,20 @@ export interface LanAddress {
   private: boolean;
 }
 
+/** Names that look like virtual/VPN/tunnel adapters — deprioritize them. */
+const VIRTUAL_IFACE =
+  /vEthernet|vethernet|virtual|vmware|virtualbox|docker|hyper[- ]?v|loopback|bluetooth|tap|tun|wireguard|tailscale|zerotier|hamachi|nordlynx|nordvpn|openvpn|anyconnect|globalprotect|fortinet|wsl/i;
+
+/** Names that look like physical Wi-Fi/Ethernet adapters — prefer them. */
+const PHYSICAL_IFACE =
+  /wi[- ]?fi|wlan|wireless|eth(?:ernet)?|enp|wlp|en\d|local area connection|ethernet/i;
+
+function ifaceScore(name: string): number {
+  if (VIRTUAL_IFACE.test(name)) return -1000;
+  if (PHYSICAL_IFACE.test(name)) return 100;
+  return 0;
+}
+
 /** All non-internal IPv4 addresses of this machine, most useful first. */
 export function lanAddresses(): LanAddress[] {
   const out: LanAddress[] = [];
@@ -35,8 +49,12 @@ export function lanAddresses(): LanAddress[] {
       });
     }
   }
-  // Private/home addresses first, then virtual adapters (Hyper-V, Docker…).
-  out.sort((a, b) => Number(b.private) - Number(a.private));
+  // Physical adapters first, then private/home addresses, then virtual ones.
+  out.sort((a, b) => {
+    const s = ifaceScore(b.iface) - ifaceScore(a.iface);
+    if (s !== 0) return s;
+    return Number(b.private) - Number(a.private);
+  });
   return out;
 }
 

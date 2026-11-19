@@ -11,6 +11,7 @@ import {
   desktopCapturer,
   shell,
 } from 'electron';
+import { execFile } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import {
@@ -855,6 +856,40 @@ function setupIPC() {
     const status = await bridge.stop();
     bridgeActive = false;
     return status;
+  });
+
+  // One-click unblock for the most common "phone can't reach the console on
+  // the same Wi-Fi" cause: Windows Defender Firewall silently dropping inbound
+  // TCP for this app. Adds a private-profile inbound rule via an elevated
+  // netsh (a UAC prompt is shown; the user may cancel, in which case we return
+  // the manual command). Failure NEVER throws — the renderer shows the text.
+  ipcMain.handle('allowBridgeFirewall', async (): Promise<{ ok: boolean; error?: string }> => {
+    const port = currentSettings().coachPort || 47821;
+    const ps =
+      `$ErrorActionPreference = 'Stop'; ` +
+      `try { ` +
+      `Start-Process netsh -Verb RunAs -Wait -ArgumentList 'advfirewall','firewall','add','rule','name="InterviewClaudePilte Coach Bridge"','dir=in','action=allow','protocol=TCP','localport=${port}','profile=private' | Out-Null; ` +
+      `exit 0 ` +
+      `} catch { exit 1 }`;
+    const manual =
+      `Run this in an elevated PowerShell: netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=${port} profile=private`;
+    return new Promise((resolve) => {
+      execFile(
+        'powershell.exe',
+        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps],
+        { windowsHide: true, timeout: 60000 },
+        (error, _stdout, stderr) => {
+          if (!error) return resolve({ ok: true });
+          const detail = (stderr || error.message || '').trim().slice(0, 300);
+          resolve({
+            ok: false,
+            error:
+              `Firewall rule not added${detail ? ` (${detail})` : ''} — UAC may have been cancelled or blocked. ` +
+              manual,
+          });
+        },
+      );
+    });
   });
 
   ipcMain.on('sendCoachHint', (_event, text: string) => {

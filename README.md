@@ -59,7 +59,11 @@ InterviewClaudePilte adds:
   and the streaming answers, send hints/chat messages, see the live connection
   latency (RTT), edit the transcript, and toggle auto-answer / tone / session
   controls remotely. The candidate sees the connected coaches and their RTT
-  in the dashboard.
+  in the dashboard. If the phone shows "connecting…" forever on the same Wi-Fi,
+  the Coach tab shows all detected addresses, a `http://localhost:<port>/`
+  self-test hint, router-isolation / mobile-data warnings, and a one-click
+  **Allow through Windows Firewall** button (elevated `netsh` rule for TCP
+  `47821`, private profile — a UAC prompt appears).
 - **(d) 10-screenshot context** — `Ctrl+H` keeps the newest **10** screenshots
   for vision models (upstream kept 5); oldest are dropped past the cap, and
   `Ctrl+Delete` removes the newest. The capture toast shows `n/10`.
@@ -170,10 +174,22 @@ prompt). The build bundles `resources/whisper` (CLI + Base model) as extra
 resources; nothing else is downloaded at install time. (`npx electron-builder
 --win nsis` is the underlying command if you prefer calling it directly.)
 
-### Verification status (v1.0.1, Nov 2026)
+### Verification status (v1.0.2, Nov 2026)
 
 - `npm run build` (typecheck + bundles) is clean; renderer bundle contains the
-  IC logo and no shield assets.
+  IC logo and no shield assets, and **zero native `title=` attributes** (all
+  tooltips are capture-protected in-page `data-tip` ones — native OS/browser
+  tooltips are visible on screen shares).
+- v1.0.2 bug fixes verified live (packaged app): bridge starts from IPC,
+  `http://<lan-ip>:47821/` serves HTTP 200, WS pairing handshake succeeds
+  (RTT ~11 ms), Coach-tab diagnostics panel renders (localhost self-test hint,
+  router/mobile-data checklist, firewall button), no native tooltips in DOM.
+- Coach Console connectivity: same LAN, the page itself is same-origin
+  (HTTP + WS on port 47821), so "connecting…" on a phone is almost always the
+  Windows Firewall blocking inbound TCP or router AP/client isolation — use the
+  in-app **Allow through Windows Firewall** button or `netsh advfirewall
+  firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow
+  protocol=TCP localport=47821 profile=private` in an elevated prompt.
 - `tools/cdp_check_screenshot_limit.cjs` passes: 10 captures stick, the
   11th/12th are clipped, tray restored to empty (Ctrl+H context cap = 10).
 - **Full mock interview passes end-to-end** (`tools/cdp_mock_interview.cjs` +

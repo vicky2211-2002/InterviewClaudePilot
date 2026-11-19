@@ -321,6 +321,8 @@ export interface ElectronAPI {
   getBridgeStatus: () => Promise<BridgeStatus>;
   startBridge: () => Promise<BridgeStatus>;
   stopBridge: () => Promise<BridgeStatus>;
+  /** Add a private-profile inbound firewall rule for the bridge (UAC prompt). */
+  allowBridgeFirewall: () => Promise<{ ok: boolean; error?: string }>;
   sendCoachHint: (text: string) => void;
   sendCoachChat: (text: string) => void;
   onCoachHint: (callback: (text: string) => void) => () => void;

@@ -33,6 +33,19 @@ renderer listener was a no-op; `Analyse Screen` still reads the array via
 Ported into InterviewClaudePilte for v1.0.1 (same tool in `tools/`, same cap) —
 re-verified in this repo (12 captures, 10 stick, tray restored).
 
+**InterviewClaudePilte v1.0.2 status (Nov 2026, supersedes 1.0.1):** two bug fixes
+verified live in the packaged app — (1) native HTML tooltips (`title=`) replaced by
+capture-protected in-page `data-tip` ones (native tooltips were visible on screen
+shares; e.g. the Coach-tab "Restart the timer" button) — renderer now ships zero
+`title=` attributes; (2) Coach Console connectivity diagnostics — the phone stuck on
+"connecting…" on the same Wi-Fi is almost always Windows Firewall or router
+AP/client isolation, so the Coach tab now lists ALL detected addresses (not just the
+primary), shows a `http://localhost:<port>/` self-test hint and router/mobile-data
+checklist, and adds a one-click **Allow through Windows Firewall** button (elevated
+netsh rule, private profile) via the `allowBridgeFirewall` IPC. `lan.ts` adapter
+ranking now prefers physical Wi-Fi/Ethernet over virtual/VPN/tunnel adapters.
+Verified: bridge IPC start/stop, LAN HTTP 200, WS PIN handshake, diagnostics render.
+
 **InterviewClaudePilte v1.0.1 status (Nov 2026):** installer rebuilt and
 smoke-launched; renderer bundle carries the new IC logo (no shield);
 settings restore byte-identical after tests. Full mock interview passes
