@@ -33,7 +33,22 @@ renderer listener was a no-op; `Analyse Screen` still reads the array via
 Ported into InterviewClaudePilte for v1.0.1 (same tool in `tools/`, same cap) —
 re-verified in this repo (12 captures, 10 stick, tray restored).
 
-**InterviewClaudePilte v1.0.2 status (Nov 2026, supersedes 1.0.1):** two bug fixes
+**InterviewClaudePilte v1.0.3 status (Nov 2026, supersedes 1.0.2):** the Coach
+Console was completely broken in the released build — the console page's inline
+script had a `SyntaxError` (the TS template literal ate the `\'` escapes, leaving
+a raw apostrophe in a single-quoted string), so no client could ever connect: every
+device sat on "Connecting…" forever, PIN prompt never appeared, WebSocket never
+started. A second string-escaping syntax error lurked in the transcript
+Edit/Delete buttons (adjacent string literals). Fixed by removing the apostrophe
+and replacing string-built `onclick` attributes with `data-edit`/`data-del` + a
+delegated click listener. Also fixed: `showToast()` was called but never defined
+(toasts vanished), and the RTT widget was stubbed (no `pong` handler; constant
+~5000 ms) — now live (measured 6 ms in the packaged build, zero console errors,
+WS `readyState 1`, candidate snapshot syncs, hint sent console→overlay
+end-to-end). v1.0.2 remains on GitHub with the broken console page — v1.0.3 is the
+release to use. New: `USER_GUIDE.md` (full how-to-use manual); README links it.
+
+**InterviewClaudePilte v1.0.2 status (Nov 2026, superseded by 1.0.3):** two bug fixes
 verified live in the packaged app — (1) native HTML tooltips (`title=`) replaced by
 capture-protected in-page `data-tip` ones (native tooltips were visible on screen
 shares; e.g. the Coach-tab "Restart the timer" button) — renderer now ships zero

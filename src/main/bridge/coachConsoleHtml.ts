@@ -149,7 +149,7 @@ ${pinRequired ? '' : ''}
 const params = new URLSearchParams(location.search);
 let pin = params.get('pin') || sessionStorage.getItem('coachPin') || '';
 if (!pin) {
-  pin = prompt('Enter the 6-digit PIN shown on the candidate\'s screen') || '';
+  pin = prompt('Enter the 6-digit PIN shown on the candidate screen') || '';
   sessionStorage.setItem('coachPin', pin);
 }
 let ws;
@@ -180,6 +180,16 @@ function setConn(ok) {
   const text = document.getElementById('connText');
   dot.className = 'dot ' + (ok ? 'ok' : 'err');
   text.textContent = ok ? 'Connected' : 'Disconnected';
+}
+
+let toastTimer;
+function showToast(text) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = String(text);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
 }
 
 function handle(msg) {
@@ -221,6 +231,13 @@ function handle(msg) {
     case 'chat':
       showToast(msg.by + ': ' + msg.text);
       return;
+    case 'pong': {
+      const el = document.getElementById('mRtt');
+      if (el && typeof msg.t0 === 'number') {
+        el.textContent = Math.max(0, Math.round(Date.now() - msg.t0)) + ' ms';
+      }
+      return;
+    }
     case 'toast':
       showToast(msg.message);
       return;
@@ -258,8 +275,8 @@ function renderTranscript() {
     '<div class="seg" data-id="' + escapeHtml(seg.id) + '">'
     + '<div class="who ' + (seg.speaker === 'candidate' ? 'candidate' : '') + '">'
     + '<span>' + escapeHtml(seg.speaker === 'candidate' ? 'Candidate' : seg.speaker === 'interviewer' ? 'Interviewer' : 'System') + '</span>'
-    + '<span><button class="ghost" style="padding:2px 8px" onclick="editSegment(\'' + escapeHtml(seg.id) + '\')">Edit</button>'
-    + '<button class="ghost" style="padding:2px 8px;color:#f87171" onclick="deleteSegment(\'' + escapeHtml(seg.id) + '\')">Del</button></span>'
+    + '<span><button class="ghost" style="padding:2px 8px" data-edit="' + escapeHtml(seg.id) + '">Edit</button>'
+    + '<button class="ghost" style="padding:2px 8px;color:#f87171" data-del="' + escapeHtml(seg.id) + '">Del</button></span>'
     + '</div><p>' + escapeHtml(seg.text) + '</p>'
     + '</div>'
   ).join('');
@@ -312,7 +329,7 @@ function deleteSegment(id) { if (confirm('Delete this segment?')) cmd({ type: 't
 function pingLoop() {
   const t0 = Date.now();
   cmd({ type: 'ping', t0 });
-  setTimeout(() => { document.getElementById('mRtt').textContent = (Date.now() - t0 - 0) + ' ms'; pingLoop(); }, 5000);
+  setTimeout(pingLoop, 5000);
 }
 
 setInterval(() => {
@@ -320,6 +337,14 @@ setInterval(() => {
   const sec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
   el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
 }, 1000);
+
+document.getElementById('transcript').addEventListener('click', function (event) {
+  const t = event.target;
+  const edit = t && t.closest ? t.closest('[data-edit]') : null;
+  const del = t && t.closest ? t.closest('[data-del]') : null;
+  if (edit) editSegment(edit.getAttribute('data-edit'));
+  else if (del) deleteSegment(del.getAttribute('data-del'));
+});
 
 connect();
 pingLoop();

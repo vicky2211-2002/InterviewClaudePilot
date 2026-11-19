@@ -15,6 +15,9 @@ InterviewClaudePilte is a desktop interview assistant: a transparent, always-on-
 overlay that listens to interview audio, transcribes it locally, and generates
 answers with an AI model you configure yourself.
 
+> **New here?** Read **[USER_GUIDE.md](./USER_GUIDE.md)** — the full how-to-use
+> manual (first run, hotkeys, Coach Console step-by-step, troubleshooting).
+
 The UI is a desktop overlay — a floating command bar, a white dashboard card,
 a dark chat bar, and an answer card — not a browser page.
 
@@ -59,11 +62,13 @@ InterviewClaudePilte adds:
   and the streaming answers, send hints/chat messages, see the live connection
   latency (RTT), edit the transcript, and toggle auto-answer / tone / session
   controls remotely. The candidate sees the connected coaches and their RTT
-  in the dashboard. If the phone shows "connecting…" forever on the same Wi-Fi,
-  the Coach tab shows all detected addresses, a `http://localhost:<port>/`
+  in the dashboard. The console page is plain HTML/JS (v1.0.3 fixes the page so
+  it connects reliably). If a phone shows "connecting…" forever on the same
+  Wi-Fi, the Coach tab shows all detected addresses, a `http://localhost:<port>/`
   self-test hint, router-isolation / mobile-data warnings, and a one-click
   **Allow through Windows Firewall** button (elevated `netsh` rule for TCP
-  `47821`, private profile — a UAC prompt appears).
+  `47821`, private profile — a UAC prompt appears). Step-by-step instructions
+  for the coach flow: [USER_GUIDE.md](./USER_GUIDE.md).
 - **(d) 10-screenshot context** — `Ctrl+H` keeps the newest **10** screenshots
   for vision models (upstream kept 5); oldest are dropped past the cap, and
   `Ctrl+Delete` removes the newest. The capture toast shows `n/10`.
@@ -174,22 +179,30 @@ prompt). The build bundles `resources/whisper` (CLI + Base model) as extra
 resources; nothing else is downloaded at install time. (`npx electron-builder
 --win nsis` is the underlying command if you prefer calling it directly.)
 
-### Verification status (v1.0.2, Nov 2026)
+### Verification status (v1.0.3, Nov 2026)
 
 - `npm run build` (typecheck + bundles) is clean; renderer bundle contains the
   IC logo and no shield assets, and **zero native `title=` attributes** (all
   tooltips are capture-protected in-page `data-tip` ones — native OS/browser
   tooltips are visible on screen shares).
-- v1.0.2 bug fixes verified live (packaged app): bridge starts from IPC,
-  `http://<lan-ip>:47821/` serves HTTP 200, WS pairing handshake succeeds
-  (RTT ~11 ms), Coach-tab diagnostics panel renders (localhost self-test hint,
-  router/mobile-data checklist, firewall button), no native tooltips in DOM.
+- **Coach Console fixed and verified live in v1.0.3** (the v1.0.2 release had a
+  syntax error in the console page's inline script — every client sat on
+  "Connecting…" forever regardless of network; plus a second string-escaping
+  syntax error in the transcript Edit/Delete buttons, an undefined `showToast`,
+  and a stubbed RTT widget). In the packaged app, in a real browser: page loads
+  with **zero console errors**, WebSocket **Connected** (readyState 1),
+  candidate snapshot syncs, coaches register server-side, RTT live (**6 ms**),
+  and a hint was sent console→overlay end-to-end.
 - Coach Console connectivity: same LAN, the page itself is same-origin
-  (HTTP + WS on port 47821), so "connecting…" on a phone is almost always the
-  Windows Firewall blocking inbound TCP or router AP/client isolation — use the
-  in-app **Allow through Windows Firewall** button or `netsh advfirewall
-  firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow
-  protocol=TCP localport=47821 profile=private` in an elevated prompt.
+  (HTTP + WS on port 47821). If a phone shows "connecting…" on v1.0.3+, it is
+  Windows Firewall (use the in-app **Allow through Windows Firewall** button
+  or `netsh advfirewall firewall add rule name="InterviewClaudePilte Coach
+  Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private`)
+  or router AP/client isolation (guest Wi-Fi / Android hotspot client isolation
+  — use a non-guest network, or view the console on the hotspot host).
+- **v1.0.2 display note:** v1.0.2 added the firewall diagnostics but its
+  installer still ships the broken console page — treat v1.0.2 as superseded
+  for Coach Console use and update to v1.0.3.
 - `tools/cdp_check_screenshot_limit.cjs` passes: 10 captures stick, the
   11th/12th are clipped, tray restored to empty (Ctrl+H context cap = 10).
 - **Full mock interview passes end-to-end** (`tools/cdp_mock_interview.cjs` +
@@ -198,9 +211,8 @@ resources; nothing else is downloaded at install time. (`npx electron-builder
   the OpenAI-compatible mock endpoint — **30/30 streamed answers**, ~3.4–4.7 s
   each, 0 errors, 0 empty; provider log shows 30 × `POST /v1/chat/completions`
   with `stream: true`. Settings restored byte-identically afterwards.
-- Live run: Whisper ready, overlay created, Coach Console HTTP 200, PIN
-  handshake, `pong` round-trip ~15–54 ms on LAN, wrong PIN rejected;
-  coach → candidate transcript add verified end-to-end over CDP.
+- Live run: Whisper ready, overlay created, Coach Console HTTP 200; wrong PIN
+  rejected; coach → candidate transcript add verified end-to-end over CDP.
 - Tabs (Commands / Transcript / Coach Console / Settings / API) render and
   accept clicks; Ultra Undetectable Mode is on by default
   (`undetectableMode` / `invisibleOnScreenShare` → `setContentProtection`).

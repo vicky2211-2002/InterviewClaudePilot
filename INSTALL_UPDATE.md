@@ -132,7 +132,7 @@ For a full end-to-end answer-pipeline check (no paid key required), see
 | App doesn't launch after install | Install folder permissions or missing VC++ runtime | Re-run installer as-is (no admin needed); if still failing, uninstall via **Settings → Apps → Installed apps → InterviewClaudePilte → Uninstall** (or the uninstaller in `%LOCALAPPDATA%\Programs\InterviewClaudePilte\`), then reinstall |
 | Old UI shows after update | Cached copy in `win-unpacked` or old shortcut pointing to old path | Delete `%LOCALAPPDATA%\Programs\InterviewClaudePilte` entirely and reinstall silently (`/S`) |
 | Custom model still 404 | Wrong Base URL (must end with `/v1` for OpenAI‑compatible endpoints) | Open **Settings → API**, edit the model, set Base URL to `https://integrate.api.nvidia.com/v1` (or your endpoint’s `/v1` root), click **Save** |
-| Coach Console: phone shows "connecting" forever (same Wi-Fi) | Windows Firewall / router isolation / phone on mobile data | Coach tab -> **Allow through Windows Firewall** (UAC), or elevated: `netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private` — if it persists: router AP/client isolation (use a non-guest SSID or the phone hotspot), or mobile data routing to a LAN IP (turn it off). Self-test: `http://localhost:47821/` must load on this PC |
+| Coach Console: phone/browser shows "connecting" forever | Before v1.0.3: broken console page (a syntax error killed its script - every client stuck, fixed in v1.0.3). On v1.0.3+: Windows Firewall / router AP-isolation / phone on mobile data | If on v1.0.2 or older: update to v1.0.3 first. Otherwise Coach tab -> **Allow through Windows Firewall** (UAC), or elevated: `netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private` - if it persists: router AP/client isolation (use a non-guest SSID or the phone hotspot host), or mobile data routing to a LAN IP (turn it off). Self-test: `http://localhost:47821/` must load on this PC; see USER_GUIDE.md section 5.4 |
 | Settings not loaded | Corrupt `settings.json` | Restore backup from step 1.2, or delete the file (app will regenerate defaults on next launch) |
 | Larger Whisper model missing | Not bundled; downloads on first use | Settings → API → Transcription → Whisper model → pick `small`/`medium`/`large-v3`; wait for one-time download to `%APPDATA%\interviewclaudepilte\whisper-models` |
 | Transcription garbage / mishears technical words | Local model too small (base) | Switch **Settings → API → Transcription → Whisper model** to `small`/`medium`, or switch the provider to **API (cloud)** with Base URL `https://api.openai.com/v1` (or Groq `https://api.groq.com/openai/v1`), model `whisper-1` — then click **Test connection** |
@@ -201,7 +201,9 @@ Copy-Item "$env:TEMP\ic-backup.json" "$env:APPDATA\interviewclaudepilte\intervie
 
 ---
 
-## 9. After install — first 5 minutes
+## 9. After install - first 5 minutes
+
+> **Full manual:** [USER_GUIDE.md](./USER_GUIDE.md) explains the whole app (command bar, hotkeys, coach console step-by-step, troubleshooting) - start there if anything below is unclear.
 
 1. Open **Settings → API**.
 2. Check **Base URL** for your custom provider (e.g., NVIDIA NIM: `https://integrate.api.nvidia.com/v1`).

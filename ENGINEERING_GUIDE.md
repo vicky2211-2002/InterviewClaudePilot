@@ -58,15 +58,17 @@ InterviewClaudePilte additions on top of the original feature set:
   Wi-Fi. They can watch the live transcript and streaming answers, send
   hints/chat, see the live connection latency (RTT), edit the transcript, and
   toggle auto-answer / tone / session controls remotely. The candidate sees
-  connected coaches and their RTT in the dashboard. In v1.0.2 the Coach tab
-  lists every detected LAN address, a `http://localhost:<port>/` self-test
-  hint, a router-isolation / mobile-data checklist, and a one-click **Allow
-  through Windows Firewall** button (elevated `netsh` private-profile rule via
-  the `allowBridgeFirewall` IPC; a UAC prompt is shown, manual fallback text is
-  included in the button result). Native HTML tooltips (`title=`) were
-  eliminated app-wide in v1.0.2 - they render above the capture-protected
-  overlay and are visible on screen shares; all tooltips are now in-page
-  capture-protected `data-tip` ones (renderer ships zero `title=` attrs).
+  connected coaches and their RTT in the dashboard. (Fixed in v1.0.3: the
+  console page inline script had a syntax error and could never connect)
+  In v1.0.2 the Coach tab lists every detected LAN address, a
+  `http://localhost:<port>/` self-test hint, a router-isolation / mobile-data
+  checklist, and a one-click **Allow through Windows Firewall** button
+  (elevated `netsh` private-profile rule via the `allowBridgeFirewall` IPC; a
+  UAC prompt is shown, manual fallback text is included in the button result).
+  Native HTML tooltips (`title=`) were eliminated app-wide in v1.0.2 — they
+  render above the capture-protected overlay and are visible on screen
+  shares; all tooltips are now in-page capture-protected `data-tip` ones
+  (renderer ships zero `title=` attrs).
 
 It is a clean-room reimplementation of the behavior and layout of a reference
 commercial app (`interviewhelpai-Windows.exe`, v1.3.5). No code was copied from
@@ -150,6 +152,7 @@ interviewclaudepilte/
 â”œâ”€ README.md                   user-facing overview
 â”œâ”€ CLAUDE.md                   short brief for AI coding agents
 â”œâ”€ MULTI_AGENT_PROJECT_PLAN.md historical plan + final status
+- USER_GUIDE.md          how-to-use manual (first run, hotkeys, Coach Console, troubleshooting)
 â””â”€ AGENT_SKILLS_SETUP.md       optional agent-role catalog
 ```
 
@@ -612,29 +615,47 @@ Restore the previous settings byte-identically afterwards.
 
 ---
 
-### 7.9 Coach Console connectivity (v1.0.2)
+### 7.9 Coach Console connectivity (v1.0.3)
 
-Symptom: a phone on the same Wi-Fi scans the QR code but sits at "connecting...".
+Symptom: a phone/PC browser opens the console but sits at "connecting..." forever.
 
-Isolate server vs network: first load http://localhost:47821/ on THIS PC (must be
-HTTP 200 with the console brand) and check ws://<lan-ip>:47821/ws answers
-'welcome' with the shown PIN. Both passing means the bridge is healthy and the
-block is between phone and PC:
+This exact symptom had TWO independent causes - check them in this order:
 
-1. Windows Defender Firewall silently drops inbound TCP 47821 for this app.
-   Fix from the app: Coach tab -> "Allow through Windows Firewall" (elevated netsh
-   private-profile rule, UAC prompt), or in an elevated PowerShell:
-   netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private
-2. Router AP/client isolation (common on guest Wi-Fi and some campus/hotspot
-   networks) blocks phone-to-PC traffic even on the same SSID. Fix: use the
-   phone's own hotspot or a non-guest network.
-3. Phone on mobile data - 5G/LTE cannot route to a private LAN address. Turn it off.
+0. (Fixed in v1.0.3) The console page INLINE SCRIPT had a SyntaxError, so no
+   client could ever connect: the TS template literal ate the \' escapes
+   ('Enter the 6-digit PIN shown on the candidate\'s screen' -> raw apostrophe
+   in a single-quoted string). The ENTIRE script failed to parse: no PIN prompt,
+   no WebSocket, status frozen on "Connecting.". A second adjacent-string-literal
+   SyntaxError lurked in the transcript Edit/Delete buttons, and showToast() was
+   called but never defined. Lesson: after shipping any URL/served page, open it
+   in a real browser and check the console for errors - HTTP 200 + WS handshake
+   from Node does NOT prove the page runs.
 
-Verified Nov 2026 (v1.0.2): bridge IPC start/stop OK, LAN HTTP 200 OK, WS PIN
-handshake OK (RTT ~11 ms from this machine), diagnostics UI renders in Coach tab,
-renderer contains zero native title= attributes. Note: the overlay deliberately does
-NOT send CORS headers, so cross-origin fetch() from the renderer to the console
-fails by design; the console page itself is same-origin and unaffected.
+1. Server vs network isolation. Load http://localhost:47821/ on THIS PC (must be
+   HTTP 200). If it works here but the phone cannot reach it, the block is the
+   network path phone -> PC:
+
+   a. Windows Defender Firewall dropping inbound TCP 47821. Fix from the app:
+      Coach tab -> "Allow through Windows Firewall" (elevated netsh private-profile
+      rule, UAC prompt), or an elevated PowerShell:
+      netsh advfirewall firewall add rule name="InterviewClaudePilte Coach Bridge" dir=in action=allow protocol=TCP localport=47821 profile=private
+      NOTE: the exe-scoped Public-profile rules (created on this machine for
+      release\win-unpacked\InterviewClaudePilte.exe, TCP/UDP Any inbound) may
+      already allow it; check with Get-NetFirewallRule.
+   b. Router AP/client isolation (guest Wi-Fi, campus SSIDs, Android hotspot
+      client<->client isolation) blocks phone-to-PC even on the same SSID.
+      Fix: use a non-guest network, or view the console on the hotspot HOST
+      device (host -> client is usually allowed).
+   c. Phone on mobile data: 5G/LTE cannot route to a private LAN address.
+      Turn it off.
+
+Verified Nov 2026 (v1.0.3), packaged build, in a real browser on this PC:
+console page loads with zero console errors; WS Connected (readyState 1);
+candidate snapshot syncs (name/tone/listening); coaches register server-side;
+RTT live via the pong handler (measured 6 ms); hint sent console -> overlay
+end-to-end. Note: the overlay deliberately does NOT send CORS headers, so
+cross-origin fetch() from the renderer to the console fails by design; the
+console page itself is same-origin and unaffected.
 ## 8. Reverse engineering an Electron app
 
 Use this to compare against any desktop app (including newer builds of the
