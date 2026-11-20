@@ -103,7 +103,8 @@
         }
       ],
       "icon": "resources/icon.ico",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "executableName": "SystemHost"
     },
     "nsis": {
       "oneClick": false,

@@ -256,14 +256,15 @@ export function SettingsTab({ settings, onUpdate, appVersion, onPickResume, resu
           <div>
             <h3 className="text-[16px] font-semibold text-gray-900">Task Manager invisibility</h3>
             <p className="mt-1 text-[14px] text-gray-500">
-              Hide the app from Task Manager's Details tab and Alt+Tab switcher. Uses a generic system
-              process name ("Windows.System.Host") instead of "InterviewClaudePilte". Requires Windows.
+              The app installs as <code className="rounded bg-gray-100 px-1 py-0.5 text-[12px]">SystemHost.exe</code>.
+              Enable this to also mask the process name in Task Manager → Processes tab as "Windows.System.Host"
+              (Details tab will still show "SystemHost.exe"). Requires Windows.
             </p>
           </div>
           <Toggle
             checked={settings.invisibleInTaskManager}
             onChange={(next) => onUpdate({ invisibleInTaskManager: next })}
-            label="Hide from Task Manager"
+            label="Mask process name in Task Manager"
           />
         </div>
       </section>
