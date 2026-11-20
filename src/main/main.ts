@@ -392,7 +392,9 @@ function buildQuestionContext(): string {
 
 async function resolveImages(extra?: string[]): Promise<string[]> {
   const shots = [...screenshots, ...(extra || [])];
-  return shots.slice(-3);
+  // Return ALL screenshots (up to MAX_SCREENSHOTS) for multi-image context
+  // The vision provider will receive them as separate image_url entries
+  return shots.slice(-MAX_SCREENSHOTS);
 }
 
 async function handleAsk(request: AskRequest): Promise<{ ok: boolean; error?: string; code?: string }> {
@@ -421,9 +423,12 @@ async function handleAsk(request: AskRequest): Promise<{ ok: boolean; error?: st
   if (request.mode === 'answer') {
     const context = buildQuestionContext();
     if (!context && !prompt) {
+      const settings = currentSettings();
+      const listeningStatus = isListening ? 'ON' : 'OFF';
+      const transcriptCount = currentTranscript.length;
       return {
         ok: false,
-        error: 'No interview audio captured yet. Start listening first.',
+        error: `No interview audio captured yet. Listening: ${listeningStatus} | Transcript segments: ${transcriptCount}. Fix: (1) Press Ctrl+Shift+L to start listening, (2) Ensure transcription provider is configured in Settings → API → Transcription, (3) Speak or play interview audio.`,
         code: 'NO_CONTEXT',
       };
     }
@@ -514,10 +519,11 @@ async function handleAsk(request: AskRequest): Promise<{ ok: boolean; error?: st
 
     if (images.length > 0) {
       try {
+        // Send ALL images for multi-screenshot context
         await aiProviderManager.generateResponseStreamWithVision(
           prompt,
           modelId,
-          images[images.length - 1],
+          images,
           onChunk,
         );
       } catch (visionError) {
@@ -526,9 +532,9 @@ async function handleAsk(request: AskRequest): Promise<{ ok: boolean; error?: st
           // e.g. vLLM started without --enable-multimodal: retry text-only so
           // the candidate still gets an answer instead of a dead card.
           console.warn('[Main] vision model rejected the image, retrying text-only:', sanitizeProviderMessage(raw));
-          toast('Model has no multimodal processing — answering without the screenshot', 'info');
+          toast('Model has no multimodal processing — answering without screenshots', 'info');
           await aiProviderManager.generateResponseStream(
-            `${prompt}\n\nNOTE: No image is available to you — answer from the transcript only.`,
+            `${prompt}\n\nNOTE: No images are available to you — answer from the transcript only.`,
             modelId,
             onChunk,
           );

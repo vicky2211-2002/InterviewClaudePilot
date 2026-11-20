@@ -12,13 +12,13 @@ const PRIMARY: Row[] = [
     keys: ['Ctrl', 'Enter'],
     title: 'Generate Answer',
     description:
-      "Generates a fast, concise answer to any interviewer's asked question. This mode does NOT capture or analyze your screen, so it cannot answer questions that require on-screen context.",
+      "Generates a fast, concise answer to any interviewer's asked question using the live transcript. This mode does NOT capture your screen. Requires: listening active + transcript captured.",
   },
   {
     keys: ['Ctrl', 'Shift', 'Enter'],
     title: 'Analyse Screen and Generate Answer',
     description:
-      "Captures and analyzes your current screen, then generates an answer to any question using on-screen content as context. Use this when the question depends on what's visible on your screen.",
+      "Captures your screen, then generates an answer using on-screen content + transcript. Use for coding questions, code review, or any visual context. Requires: Screen Vision enabled in Settings → Screen analysis (vision) + a multimodal model (GPT-4o, Claude 3.5, Gemini 1.5, etc.).",
   },
 ];
 
@@ -26,27 +26,27 @@ const SECONDARY: Row[] = [
   {
     keys: ['Ctrl', 'Alt', 'Enter'],
     title: 'Chat with AI',
-    description: 'Opens the chat box to ask the AI assistant any question during your interview.',
+    description: 'Opens the chat box to ask the AI assistant any question. Toggle "Use Screen" in chat to include screenshots.',
   },
   {
     keys: ['Ctrl', 'R'],
     title: 'Reset Context',
-    description: 'Clears the conversation history to start fresh with a new question or topic.',
+    description: 'Clears conversation history, answers, chat, and screenshots — start fresh.',
   },
   {
     keys: ['Ctrl', 'Shift', 'L'],
     title: 'Start / Stop Listening',
-    description: 'Toggles live transcription of the interview audio.',
+    description: 'Toggles live transcription (loopback audio + microphone). MUST be ON for answers to work.',
   },
   {
     keys: ['Ctrl', 'H'],
-    title: 'Take Screenshots',
-    description: 'Manually take screenshots; each press confirms with a toast. Attach more than one for multi-screen problems.',
+    title: 'Take Screenshot (×10 max)',
+    description: 'Capture current screen. Press multiple times for multi-image context (up to 10). Toast shows count. Used by "Analyse Screen" and chat with "Use Screen".',
   },
   {
     keys: ['Ctrl', 'Delete'],
     title: 'Delete Last Screenshot',
-    description: 'Removes the most recently captured screenshot from the context.',
+    description: 'Removes the most recent screenshot from context. Shows remaining count in toast.',
   },
   {
     keys: ['Ctrl', '\\'],

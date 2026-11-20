@@ -239,16 +239,19 @@ export class AIProviderManager extends EventEmitter {
   async generateResponseStreamWithVision(
     prompt: string,
     modelId: string,
-    imageDataUrl: string,
+    imageDataUrls: string | string[],
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
     const { provider, modelName } = this.resolveProvider(modelId);
 
     const systemPrompt = this.buildSystemPrompt();
 
+    // Normalize to array
+    const images = Array.isArray(imageDataUrls) ? imageDataUrls : [imageDataUrls];
+
     // Check if provider supports vision
     if ('generateResponseStreamWithVision' in provider) {
-      return (provider as any).generateResponseStreamWithVision(systemPrompt, prompt, modelName, imageDataUrl, {
+      return (provider as any).generateResponseStreamWithVision(systemPrompt, prompt, modelName, images, {
         temperature: this.settings.temperature ?? 0.7,
         maxTokens: this.settings.maxTokens ?? 2048,
       }, onChunk);
@@ -342,7 +345,7 @@ abstract class BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse>;
@@ -412,21 +415,20 @@ class OpenAIProvider extends BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
+    const userContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string; detail: 'high' } }> = [
+      { type: 'text', text: userPrompt },
+      ...imageDataUrls.map<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>(url => ({ type: 'image_url', image_url: { url, detail: 'high' } }))
+    ];
+
     const stream = await this.client.chat.completions.create({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { 
-          role: 'user', 
-          content: [
-            { type: 'text', text: userPrompt },
-            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-          ]
-        },
+        { role: 'user', content: userContent },
       ],
       temperature: options.temperature,
       max_tokens: options.maxTokens,
@@ -521,23 +523,22 @@ class AnthropicProvider extends BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
-    // Extract base64 from data URL
-    const base64Data = imageDataUrl.split(',')[1];
-    
+    const content = [
+      { type: 'text', text: userPrompt },
+      ...imageDataUrls.map(url => {
+        const base64Data = url.split(',')[1];
+        return { type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64Data } } as any;
+      })
+    ];
+
     const stream = this.client.messages.stream({
       model,
       system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'text', text: userPrompt },
-          { type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64Data } } as any
-        ]
-      }],
+      messages: [{ role: 'user', content }],
       temperature: options.temperature,
       max_tokens: options.maxTokens,
     });
@@ -643,15 +644,18 @@ class GoogleProvider extends BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
     const generativeModel = this.client.getGenerativeModel({ model });
     
-    // Extract base64 from data URL
-    const base64Data = imageDataUrl.split(',')[1];
-    const mimeType = imageDataUrl.split(';')[0].split(':')[1];
+    // Extract base64 from data URLs
+    const images = imageDataUrls.map(url => {
+      const base64Data = url.split(',')[1];
+      const mimeType = url.split(';')[0].split(':')[1];
+      return { inlineData: { mimeType, data: base64Data } };
+    });
     
     const result = await generativeModel.generateContentStream({
       contents: [
@@ -661,7 +665,7 @@ class GoogleProvider extends BaseProvider {
           role: 'user', 
           parts: [
             { text: userPrompt },
-            { inlineData: { mimeType, data: base64Data } }
+            ...images
           ]
         }
       ],
@@ -761,21 +765,20 @@ class NVIDIAProvider extends BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
+    const userContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string; detail: 'high' } }> = [
+      { type: 'text', text: userPrompt },
+      ...imageDataUrls.map<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>(url => ({ type: 'image_url', image_url: { url, detail: 'high' } }))
+    ];
+
     const stream = await this.client.chat.completions.create({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { 
-          role: 'user', 
-          content: [
-            { type: 'text', text: userPrompt },
-            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-          ]
-        },
+        { role: 'user', content: userContent },
       ],
       temperature: options.temperature,
       max_tokens: options.maxTokens,
@@ -877,22 +880,21 @@ class CustomProvider extends BaseProvider {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    imageDataUrl: string,
+    imageDataUrls: string[],
     options: { temperature: number; maxTokens: number },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
     const useModel = model || this.defaultModel;
+    const userContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string; detail: 'high' } }> = [
+      { type: 'text', text: userPrompt },
+      ...imageDataUrls.map<{ type: 'image_url'; image_url: { url: string; detail: 'high' } }>(url => ({ type: 'image_url', image_url: { url, detail: 'high' } }))
+    ];
+
     const stream = await this.client.chat.completions.create({
       model: useModel,
       messages: [
         { role: 'system', content: systemPrompt },
-        { 
-          role: 'user', 
-          content: [
-            { type: 'text', text: userPrompt },
-            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-          ]
-        },
+        { role: 'user', content: userContent },
       ],
       temperature: options.temperature,
       max_tokens: options.maxTokens,

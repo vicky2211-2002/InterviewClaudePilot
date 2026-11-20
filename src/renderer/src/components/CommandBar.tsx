@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic } from 'lucide-react';
+import { Mic, Eye, EyeOff } from 'lucide-react';
 
 /** App logo: gradient "IC" tile — replaces the old shield. */
 export function IcLogo({ size = 17 }: { size?: number }) {
@@ -43,6 +43,8 @@ interface CommandBarProps {
   onToggleChat: () => void;
   onToggleListening: () => void;
   busy?: boolean;
+  screenVisionEnabled?: boolean;
+  screenshotsCount?: number;
 }
 
 export function CommandBar({
@@ -56,6 +58,8 @@ export function CommandBar({
   onToggleChat,
   onToggleListening,
   busy,
+  screenVisionEnabled = false,
+  screenshotsCount = 0,
 }: CommandBarProps) {
   return (
     <div
@@ -84,6 +88,23 @@ export function CommandBar({
         Show/Hide
       </button>
 
+      {/* Vision / Screenshots status */}
+      <span
+        data-tip={
+          screenVisionEnabled
+            ? `Screen vision ON • ${screenshotsCount} screenshot${screenshotsCount !== 1 ? 's' : ''} captured (Ctrl+H to add)`
+            : 'Screen vision OFF • Enable in Settings → Screen analysis (vision)'
+        }
+        className={`tip relative ml-1.5 grid h-[26px] w-[26px] place-items-center rounded-full transition ${screenVisionEnabled ? 'bg-emerald-500 text-white' : 'bg-gray-700 text-white/60'}`}
+      >
+        {screenVisionEnabled ? <Eye className="h-[13px] w-[13px]" strokeWidth={2.6} /> : <EyeOff className="h-[13px] w-[13px]" strokeWidth={2.6} />}
+        {screenshotsCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+            {screenshotsCount > 9 ? '9+' : screenshotsCount}
+          </span>
+        )}
+      </span>
+
       <span className="ml-1.5 min-w-[36px] text-center text-[11.5px] font-medium tabular-nums text-white/85">
         {elapsed}
       </span>
@@ -91,7 +112,7 @@ export function CommandBar({
       <button
         type="button"
         onClick={onToggleListening}
-        data-tip={listening ? 'Stop listening' : 'Start listening'}
+        data-tip={listening ? 'Stop listening' : 'Start listening (Ctrl+Shift+L)'}
         className={`tip relative ml-0.5 grid h-[26px] w-[26px] place-items-center rounded-full transition ${
           listening ? 'bg-red-500 text-white pulse-ring' : 'bg-white text-[#0c0c0e] hover:bg-white/90'
         }`}

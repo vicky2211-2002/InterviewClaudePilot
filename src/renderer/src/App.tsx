@@ -39,6 +39,7 @@ export default function App() {
   const [scrollSignal, setScrollSignal] = useState<{ direction: 'up' | 'down' | 'left' | 'right'; nonce: number } | null>(null);
   const [resumeLoading, setResumeLoading] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [screenshotsCount, setScreenshotsCount] = useState(0);
 
   const capture = useAudioCapture();
   const toastTimer = useRef<number | null>(null);
@@ -76,7 +77,7 @@ export default function App() {
       if (status.status === 'error' && status.error) showToast({ message: status.error, kind: 'error' });
     });
     const offToast = window.electronAPI.onToast(showToast);
-    const offShots = window.electronAPI.onScreenshots(() => undefined);
+    const offShots = window.electronAPI.onScreenshots(({ count }) => setScreenshotsCount(count));
 
     return () => {
       offSettings();
@@ -364,6 +365,8 @@ export default function App() {
               setChatOpen((open) => !open);
             }}
             onToggleListening={() => void toggleListening()}
+            screenVisionEnabled={settings?.screenVisionEnabled !== false}
+            screenshotsCount={screenshotsCount}
           />
         </div>
 

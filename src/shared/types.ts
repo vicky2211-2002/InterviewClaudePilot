@@ -185,6 +185,8 @@ export interface AskRequest {
   question: string;
   /** Extra screenshots (data URLs) to attach for vision models. */
   images?: string[];
+  /** Optional instruction template key for specialized interview scenarios. */
+  instructionTemplate?: string;
 }
 
 export interface WhisperStatus {
