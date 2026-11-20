@@ -8,6 +8,7 @@ import type {
   TranscriptSegment,
   UiCommand,
   WhisperStatus,
+  VisionCapableModel,
 } from './types';
 import type { BridgeStatus } from '../shared/bridge';
 
@@ -25,6 +26,7 @@ const api = {
 
   // Models
   getAvailableModels: (): Promise<AIModelOption[]> => ipcRenderer.invoke('get-available-models'),
+  getVisionCapableModels: (): Promise<VisionCapableModel[]> => ipcRenderer.invoke('get-vision-capable-models'),
   addCustomModel: (model: AIModel): Promise<void> => ipcRenderer.invoke('add-custom-model', model),
   removeCustomModel: (modelId: string): Promise<void> => ipcRenderer.invoke('remove-custom-model', modelId),
   testModel: (modelId: string, prompt: string) => ipcRenderer.invoke('test-model', { modelId, prompt }),

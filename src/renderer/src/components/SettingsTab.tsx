@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, FileText, Sparkles, Zap, Code, Brain, Layout, MessageSquare } from 'lucide-react';
-import { AIModelOption, Settings } from '@shared/types';
+import { ChevronDown, FileText, Sparkles, Zap, Code, Brain, Layout, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
+import { AIModelOption, Settings, VisionCapableModel } from '@shared/types';
 import { Toggle } from './Keycap';
 
 interface SettingsTabProps {
@@ -181,6 +181,8 @@ const LANGUAGES = [
 export function SettingsTab({ settings, onUpdate, appVersion, onPickResume, resumeLoading }: SettingsTabProps) {
   const [instructions, setInstructions] = useState(settings.instructions || '');
   const [availableModels, setAvailableModels] = useState<AIModelOption[]>([]);
+  const [visionCapableModels, setVisionCapableModels] = useState<VisionCapableModel[]>([]);
+  const [visionModelWarning, setVisionModelWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,13 +192,34 @@ export function SettingsTab({ settings, onUpdate, appVersion, onPickResume, resu
         if (!cancelled) setAvailableModels(models || []);
       })
       .catch(() => {
-        // Model list unavailable — keep the "Same as answer model" default.
         if (!cancelled) setAvailableModels([]);
+      });
+    window.electronAPI
+      .getVisionCapableModels()
+      .then((models) => {
+        if (!cancelled) setVisionCapableModels(models || []);
+      })
+      .catch(() => {
+        if (!cancelled) setVisionCapableModels([]);
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Validate vision model selection
+  useEffect(() => {
+    if (!settings.visionModel || !settings.screenVisionEnabled) {
+      setVisionModelWarning(null);
+      return;
+    }
+    const isVisionCapable = visionCapableModels.some(m => m.id === settings.visionModel);
+    if (!isVisionCapable) {
+      setVisionModelWarning(`⚠ "${settings.visionModel}" may not support vision. Screen analysis will fall back to text-only. Use a vision-capable model (GPT-4o, Claude 3.5, Gemini 1.5, etc.) or leave "Same as answer model" if that model supports vision.`);
+    } else {
+      setVisionModelWarning(null);
+    }
+  }, [settings.visionModel, settings.screenVisionEnabled, visionCapableModels]);
 
   return (
     <div className="space-y-4 px-6 pb-6 pt-5">
@@ -295,18 +318,37 @@ export function SettingsTab({ settings, onUpdate, appVersion, onPickResume, resu
               className="w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-9 text-[14px] text-gray-900 outline-none focus:border-emerald-400 disabled:opacity-50"
             >
               <option value="">Same as answer model (default)</option>
-              {availableModels.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.id}
-                </option>
-              ))}
+              {visionCapableModels.length > 0 ? (
+                visionCapableModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} — {model.provider}
+                  </option>
+                ))
+              ) : (
+                availableModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name || model.id} {model.supportsVision ? '(vision ✓)' : '(text only)'}
+                  </option>
+                ))
+              )}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           </div>
+          {visionModelWarning && (
+            <div className="mt-2 flex items-start gap-2 text-[12px] text-amber-700 bg-amber-50 rounded-md p-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{visionModelWarning}</span>
+            </div>
+          )}
+          {!visionModelWarning && settings.visionModel && settings.screenVisionEnabled && visionCapableModels.some(m => m.id === settings.visionModel) && (
+            <p className="mt-2 flex items-center gap-1.5 text-[12px] text-emerald-700">
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span>This model supports vision ✓</span>
+            </p>
+          )}
           <p className="mt-2 text-[12.5px] text-gray-400">
-            Use a multimodal model just for screenshots (e.g. NIM{' '}
-            <code className="rounded bg-gray-100 px-1 py-0.5 text-[12px]">nvidia/nemotron-3-nano-omni-30b-a3b-reasoning</code>),
-            or keep “Same as answer model”. With the toggle OFF, answers come from the conversation transcript only.
+            Use a multimodal model just for screenshots (e.g. GPT-4o, Claude 3.5, Gemini 1.5).
+            Leave “Same as answer model” if that model supports vision. With the toggle OFF, answers come from transcript only.
           </p>
         </div>
       </section>

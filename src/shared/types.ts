@@ -31,6 +31,12 @@ export interface AIModelOption {
   supportsVision?: boolean;
 }
 
+export interface VisionCapableModel {
+  id: string;
+  name: string;
+  provider: string;
+}
+
 export interface TranscriptionProfile {
   id: string;
   name: string;
@@ -275,6 +281,7 @@ export interface ElectronAPI {
 
   // Models
   getAvailableModels: () => Promise<AIModelOption[]>;
+  getVisionCapableModels: () => Promise<VisionCapableModel[]>;
   addCustomModel: (model: AIModel) => Promise<void>;
   removeCustomModel: (modelId: string) => Promise<void>;
   testModel: (modelId: string, prompt: string) => Promise<{ success: boolean; response?: string; error?: string }>;

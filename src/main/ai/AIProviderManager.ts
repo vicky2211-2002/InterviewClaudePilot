@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Settings, AIModel, AIProvider, AIModelOption } from '@shared/types';
+import { Settings, AIModel, AIProvider, AIModelOption, VisionCapableModel } from '@shared/types';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
@@ -27,38 +27,38 @@ export class AIProviderManager extends EventEmitter {
     openai: {
       name: 'OpenAI',
       models: [
-        { id: 'gpt-4o', name: 'GPT-4o', description: 'Most capable GPT-4 model', maxTokens: 4096 },
-        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Fast, affordable GPT-4', maxTokens: 4096 },
-        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'High performance', maxTokens: 4096 },
-        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast, cost-effective', maxTokens: 4096 },
+        { id: 'gpt-4o', name: 'GPT-4o', description: 'Most capable GPT-4 model (vision ✓)', maxTokens: 4096, supportsVision: true },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Fast, affordable GPT-4 (vision ✓)', maxTokens: 4096, supportsVision: true },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'High performance (vision ✓)', maxTokens: 4096, supportsVision: true },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast, cost-effective (text only)', maxTokens: 4096, supportsVision: false },
       ],
       requiresApiKey: true,
     },
     anthropic: {
       name: 'Anthropic',
       models: [
-        { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent', maxTokens: 8192 },
-        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fast, efficient', maxTokens: 8192 },
-        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most powerful', maxTokens: 4096 },
+        { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent (vision ✓)', maxTokens: 8192, supportsVision: true },
+        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fast, efficient (vision ✓)', maxTokens: 8192, supportsVision: true },
+        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most powerful (vision ✓)', maxTokens: 4096, supportsVision: true },
       ],
       requiresApiKey: true,
     },
     google: {
       name: 'Google',
       models: [
-        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Best for complex tasks', maxTokens: 8192 },
-        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast, versatile', maxTokens: 8192 },
-        { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro', description: 'Balanced performance', maxTokens: 2048 },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Best for complex tasks (vision ✓)', maxTokens: 8192, supportsVision: true },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast, versatile (vision ✓)', maxTokens: 8192, supportsVision: true },
+        { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro', description: 'Balanced performance (text only)', maxTokens: 2048, supportsVision: false },
       ],
       requiresApiKey: true,
     },
     nvidia: {
       name: 'NVIDIA',
       models: [
-        { id: 'nvidia/nemotron-3-ultra-550b-a55b', name: 'Nemotron 3 Ultra 550B', description: 'Flagship reasoning model (tool-capable)', maxTokens: 4096 },
-        { id: 'nvidia/nemotron-3-super-120b-a12b', name: 'Nemotron 3 Super 120B', description: 'Fast, strong reasoning', maxTokens: 4096 },
-        { id: 'nvidia/llama-3.1-nemotron-ultra-253b-v1', name: 'Llama 3.1 Nemotron Ultra 253B', description: 'NVIDIA-optimised Llama', maxTokens: 4096 },
-        { id: 'nvidia/llama-3.1-nemotron-70b-instruct', name: 'Llama 3.1 Nemotron 70B', description: 'Faster, lower cost', maxTokens: 4096 },
+        { id: 'nvidia/nemotron-3-ultra-550b-a55b', name: 'Nemotron 3 Ultra 550B', description: 'Flagship reasoning (text only)', maxTokens: 4096, supportsVision: false },
+        { id: 'nvidia/nemotron-3-super-120b-a12b', name: 'Nemotron 3 Super 120B', description: 'Fast, strong reasoning (text only)', maxTokens: 4096, supportsVision: false },
+        { id: 'nvidia/llama-3.1-nemotron-ultra-253b-v1', name: 'Llama 3.1 Nemotron Ultra 253B', description: 'NVIDIA-optimised Llama (text only)', maxTokens: 4096, supportsVision: false },
+        { id: 'nvidia/llama-3.1-nemotron-70b-instruct', name: 'Llama 3.1 Nemotron 70B', description: 'Faster, lower cost (text only)', maxTokens: 4096, supportsVision: false },
       ],
       requiresApiKey: true,
       baseUrl: 'https://integrate.api.nvidia.com/v1',
@@ -164,6 +164,50 @@ export class AIProviderManager extends EventEmitter {
       });
 
     return models;
+  }
+
+  // Get models that support vision (for UI to show in vision model dropdown)
+  getVisionCapableModels(): VisionCapableModel[] {
+    const models: VisionCapableModel[] = [];
+
+    Object.entries(this.BUILTIN_PROVIDERS).forEach(([providerId, config]) => {
+      const hasKey = this.hasProviderKey(providerId as AIProvider);
+      if (hasKey || !config.requiresApiKey) {
+        config.models
+          .filter(m => m.supportsVision === true)
+          .forEach(model => {
+            models.push({
+              id: `${providerId}:${model.id}`,
+              name: `${config.name} - ${model.name}`,
+              provider: providerId,
+            });
+          });
+      }
+    });
+
+    // Custom models: assume vision if user configured a vision endpoint
+    this.customModels
+      .filter(m => m.enabled)
+      .forEach(model => {
+        // We can't know for sure; include all custom models as potential vision
+        models.push({
+          id: `custom:${model.id}`,
+          name: `${model.name} (${model.provider})`,
+          provider: 'custom',
+        });
+      });
+
+    return models;
+  }
+
+  // Check if a specific model ID supports vision
+  isModelVisionCapable(modelId: string): boolean {
+    // Check built-in
+    const builtIn = this.getVisionCapableModels().find(m => m.id === modelId);
+    if (builtIn) return true;
+    // Custom models: unknown, assume possibly vision
+    if (modelId.startsWith('custom:')) return true;
+    return false;
   }
 
   private resolveProvider(modelId: string): { provider: BaseProvider; modelName: string } {

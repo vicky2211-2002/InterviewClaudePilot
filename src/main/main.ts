@@ -432,6 +432,25 @@ async function handleAsk(request: AskRequest): Promise<{ ok: boolean; error?: st
   if (request.mode === 'screen' && visionEnabled) {
     images = await resolveImages(request.images);
   }
+
+  // PRE-FLIGHT VISION CHECK — give actionable error if screen mode but no images
+  if (request.mode === 'screen') {
+    if (!visionEnabled) {
+      return {
+        ok: false,
+        error: 'Screen Vision is OFF. Fix: Settings → API → Screen analysis (vision) → toggle ON. Then retry Analyse Screen (Ctrl+Shift+Enter).',
+        code: 'VISION_DISABLED',
+      };
+    }
+    if (images.length === 0) {
+      return {
+        ok: false,
+        error: 'No screenshots captured. Fix: Press Ctrl+H to take screenshots (up to 10), then retry Analyse Screen. CommandBar badge shows count.',
+        code: 'NO_SCREENSHOTS',
+      };
+    }
+  }
+
   const visionModelId = (settings.visionModel || '').trim();
   const modelId = images.length > 0 && visionModelId ? visionModelId : baseModelId;
 
@@ -703,6 +722,8 @@ function setupIPC() {
   });
 
   ipcMain.handle('get-available-models', () => aiProviderManager.getAvailableModels());
+
+  ipcMain.handle('get-vision-capable-models', () => aiProviderManager.getVisionCapableModels());
 
   ipcMain.handle('add-custom-model', (_event, model: AIModel) => {
     settingsManager.addCustomModel(model);
