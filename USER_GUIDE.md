@@ -47,9 +47,9 @@ for install/update/troubleshooting see [INSTALL_UPDATE.md](./INSTALL_UPDATE.md).
 |---|---|
 | `Ctrl+Shift+L` | Start / stop live transcription (loopback — no Stereo Mix needed) |
 | `Ctrl+Enter` | Generate answer (from the live transcript) |
-| `Ctrl+Shift+Enter` | Analyse Screen — capture the screen, answer from what is visible + the transcript |
+| `Ctrl+Shift+Enter` | Analyse Screen — capture the screen, answer from what is visible + the transcript (**sends ALL screenshots**, up to 10) |
 | `Ctrl+Alt+Enter` | Toggle the chat bar ("Use Screen" checkbox for vision models) |
-| `Ctrl+H` | Take a screenshot into context (newest **10** kept; toast shows `n/10`) |
+| `Ctrl+H` | Take a screenshot into context (newest **10** kept; toast shows `n/10`; CommandBar badge shows count) |
 | `Ctrl+Delete` | Remove the newest screenshot |
 | `Ctrl+R` | Reset context (transcript, screenshots, answers, chat) |
 | `Ctrl+\` | Show / hide the overlay completely |
@@ -73,6 +73,30 @@ mishears something you may edit or delete any segment live.
   path; there is no universal guarantee — do a trial run in your own meeting
   setup before relying on it. Global hotkeys collide with any app that claimed
   the same shortcuts (e.g. InterviewCopilot) — run one at a time.
+
+## 4.1 Vision Status Indicator (v1.0.4)
+
+The CommandBar (top floating bar) now shows a **vision status indicator** at all times:
+- 🟢 **Green eye icon** — Screen Vision is **ON** (Settings → API → Screen analysis (vision) enabled)
+- ⚪ **Gray eye icon** — Screen Vision is **OFF**
+- **Red badge with count** — Number of screenshots currently captured (via `Ctrl+H`, max 10)
+
+This lets you confirm at a glance whether "Analyse Screen" will send images to the model.
+
+## 4.2 Interview Scenario Templates (v1.0.4)
+
+In **Settings → Instructions**, a dropdown above the Instructions textarea offers six one-click templates. Selecting one auto-fills proven instructions for that interview format:
+
+| Template | Best For |
+|----------|----------|
+| **Coding Interview** | Algorithm + clean code + time/space complexity |
+| **System Design** | Requirements → architecture → scaling → trade-offs |
+| **Line-by-Line Explanation** | Explaining every line of on-screen code |
+| **Modify Code with Approach** | "Use DP / thread-safety / Strategy pattern / caching" |
+| **Architecture Discussion** | Open-ended design questions |
+| **Behavioral (STAR)** | Situation/Task/Action/Result with metrics |
+
+After selecting a template, you can edit the text before it's saved. The Instructions field persists across restarts.
 
 ## 5. Coach Console — a friend/coach helps you live (LAN)
 
@@ -105,11 +129,11 @@ chat, hints, and session controls.
 Connected coaches and their RTT appear in the Coach tab; every hint lands as a
 small toast on your screen. Use hotkeys normally — nothing changes.
 
-### 5.4 "It shows connecting… forever" — checklist (works in v1.0.3)
+### 5.4 "It shows connecting… forever" — checklist (works in v1.0.4)
 
 Note: builds **before v1.0.3** had a broken console page (a syntax error in its
 script) — every device sat on "Connecting…" forever regardless of network. If
-you are on v1.0.2 or older, **update first**. On v1.0.3:
+you are on v1.0.2 or older, **update to v1.0.4 first**. On v1.0.3+:
 
 1. On **this PC**, open `http://localhost:47821/` — if it loads and the phone
    cannot, it is the network, not the app:
@@ -150,7 +174,9 @@ time (Coach tab → **Turn off**).
 | Empty / no answer | Check the API tab **Test** button, your key, and that the transcript isn't empty |
 | Answer 404 | Base URL must end with `/v1` (e.g. `https://…/v1`) |
 | Whisper mishears | Switch to cloud transcription (§2.4) — e.g. Groq `whisper-large-v3` |
-| "Analyse Screen" refuses images | Your endpoint lacks vision — the app falls back to answering from the transcript (set a vision model or enable vision on the endpoint) |
+| "Analyse Screen" refuses images / "Model has no multimodal processing" toast | 1) Settings → API → Screen analysis (vision) → toggle **ON** 2) Use a multimodal model (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro/Flash, NVIDIA Nemotron 3 Ultra Omni) 3) If self-hosted (vLLM): start with `--enable-multimodal`. Vision status: CommandBar shows 🟢 green eye = ON, ⚪ gray = OFF |
+| "No audio captured yet" when pressing Answer | 1) Press `Ctrl+Shift+L` to start listening (red mic icon = ON) 2) Settings → API → Transcription: configure Local (offline) or API (cloud) 3) Speak/play interview audio. Error now shows `Listening: ON/OFF | Transcript segments: N` + fix checklist |
+| Multiple screenshots not sent to vision | Update to v1.0.4+. Now all screenshots (up to 10 via `Ctrl+H`) are sent simultaneously. CommandBar badge shows count. |
 | Coach console "connecting…" | See §5.4 |
 | Coach console wrong PIN / Disconnected | PIN rotates on every start — refresh the tab, enter the current PIN |
 | Tray icon missing | Restart the app; check the installer finished |

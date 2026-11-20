@@ -100,4 +100,4 @@ InterviewCopilot build (v1.2.9).*
 
 ---
 
-**Verification (v1.0.3, Nov 2026):** this prompt ships in Settings -> Instructions and is prepended to every AI request; the full pipeline (Instructions -> ask -> streamed answer) is exercised end-to-end by `tools/cdp_mock_interview.cjs` + `tools/mock_provider.cjs` - 30/30 streamed answers OK.
+**Verification (v1.0.4, Nov 2026):** this prompt ships in Settings → Instructions and is prepended to every AI request; the full pipeline (Instructions → ask → streamed answer) is exercised end-to-end by `tools/cdp_mock_interview.cjs` + `tools/mock_provider.cjs` — 30/30 streamed answers OK. v1.0.4 adds six Interview Scenario Templates in Settings → Instructions dropdown (Coding, System Design, Line-by-Line, Modify Code, Architecture, Behavioral STAR) — selecting one auto-fills this prompt with scenario-specific guidance.

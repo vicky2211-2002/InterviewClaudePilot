@@ -1,6 +1,6 @@
 {
   "name": "interviewclaudepilte",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "InterviewClaudePilte — real-time interview assistant with editable APIs, editable transcript and a built-in remote Coach Console (LAN bridge with live latency)",
   "author": "Shivani Babar",
   "license": "MIT",

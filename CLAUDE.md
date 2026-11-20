@@ -33,6 +33,24 @@ renderer listener was a no-op; `Analyse Screen` still reads the array via
 Ported into InterviewClaudePilte for v1.0.1 (same tool in `tools/`, same cap) —
 re-verified in this repo (12 captures, 10 stick, tray restored).
 
+**InterviewClaudePilte v1.0.4 status (Nov 2026, supersedes 1.0.3):** Major vision +
+transcription fixes + interview scenario templates.
+
+- **Vision multi-image:** All screenshots (up to 10, `Ctrl+H`) now sent to vision
+  model simultaneously (was: only the last one). Updated across all providers:
+  OpenAI, Anthropic, Google, NVIDIA, Custom. TypeScript types fixed for content
+  part unions (`ChatCompletionContentPartText | ChatCompletionContentPartImage`).
+- **Multimodal fallback fixed:** "Model has no multimodal processing" toast now
+  cleanly retries text-only when endpoint rejects images (e.g., vLLM without
+  `--enable-multimodal`).
+- **Vision status indicator:** CommandBar shows 🟢 green eye (vision ON) or ⚪
+  gray eye (vision OFF) with screenshot count badge.
+- **Transcription error improved:** "No audio captured yet" now shows
+  `Listening: ON/OFF | Transcript segments: N` + 3-step fix checklist.
+- **Interview scenario templates:** Settings → Instructions dropdown with 6
+  one-click templates (Coding, System Design, Line-by-Line, Modify Code,
+  Architecture, Behavioral STAR) — auto-fills proven instructions.
+
 **InterviewClaudePilte v1.0.3 status (Nov 2026, supersedes 1.0.2):** the Coach
 Console was completely broken in the released build — the console page's inline
 script had a `SyntaxError` (the TS template literal ate the `\'` escapes, leaving

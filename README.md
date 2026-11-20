@@ -71,11 +71,21 @@ InterviewClaudePilte adds:
   for the coach flow: [USER_GUIDE.md](./USER_GUIDE.md).
 - **(d) 10-screenshot context** — `Ctrl+H` keeps the newest **10** screenshots
   for vision models (upstream kept 5); oldest are dropped past the cap, and
-  `Ctrl+Delete` removes the newest. The capture toast shows `n/10`.
+  `Ctrl+Delete` removes the newest. The capture toast shows `n/10`. **v1.0.4:
+  all 10 screenshots are now sent to the vision model simultaneously** (not just
+  the last one), enabling multi-image context for coding, debugging, and
+  comparison tasks.
 - **(e) Refreshed IC logo** — a gradient **IC** tile (replacing the old shield)
   in the floating command bar. It is drawn inside the overlay window, so when
   Ultra Undetectable Mode is on (default) it disappears from screen shares and
   recordings together with everything else in the window.
+- **(f) Vision status indicator** — CommandBar shows a 🟢 green eye (vision ON)
+  or ⚪ gray eye (vision OFF) with a screenshot count badge, so you always know
+  if screen analysis is active.
+- **(g) Interview scenario templates** — Settings → Instructions now offers
+  six one-click templates (Coding, System Design, Line-by-Line, Modify Code,
+  Architecture, Behavioral STAR) that auto-fill proven instructions for each
+  interview format.
 
 ## Configure the AI
 
@@ -179,7 +189,7 @@ prompt). The build bundles `resources/whisper` (CLI + Base model) as extra
 resources; nothing else is downloaded at install time. (`npx electron-builder
 --win nsis` is the underlying command if you prefer calling it directly.)
 
-### Verification status (v1.0.3, Nov 2026)
+### Verification status (v1.0.4, Nov 2026)
 
 - `npm run build` (typecheck + bundles) is clean; renderer bundle contains the
   IC logo and no shield assets, and **zero native `title=` attributes** (all
@@ -202,7 +212,16 @@ resources; nothing else is downloaded at install time. (`npx electron-builder
   — use a non-guest network, or view the console on the hotspot host).
 - **v1.0.2 display note:** v1.0.2 added the firewall diagnostics but its
   installer still ships the broken console page — treat v1.0.2 as superseded
-  for Coach Console use and update to v1.0.3.
+  for Coach Console use and update to v1.0.3+.
+- **Vision / Screen Analysis (v1.0.4):** All screenshots (up to 10) now sent to
+  vision model simultaneously — verified in packaged build with multi-image
+  OpenAI-compatible endpoints (GPT-4o, NVIDIA Nemotron Ultra Omni). The
+  "Model has no multimodal processing" fallback to text-only works cleanly.
+- **Transcription error (v1.0.4):** "No audio captured yet" now shows
+  `Listening: ON/OFF | Transcript segments: N` + actionable 3-step fix checklist.
+- **Interview templates (v1.0.4):** Six scenario templates in Settings →
+  Instructions (Coding, System Design, Line-by-Line, Modify Code, Architecture,
+  Behavioral STAR) verified to auto-fill and persist.
 - `tools/cdp_check_screenshot_limit.cjs` passes: 10 captures stick, the
   11th/12th are clipped, tray restored to empty (Ctrl+H context cap = 10).
 - **Full mock interview passes end-to-end** (`tools/cdp_mock_interview.cjs` +

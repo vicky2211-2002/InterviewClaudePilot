@@ -153,6 +153,7 @@ interviewclaudepilte/
 â”œâ”€ CLAUDE.md                   short brief for AI coding agents
 â”œâ”€ MULTI_AGENT_PROJECT_PLAN.md historical plan + final status
 - USER_GUIDE.md          how-to-use manual (first run, hotkeys, Coach Console, troubleshooting)
+- v1.0.4 changes: multi-image vision, transcription error fix, interview templates
 â””â”€ AGENT_SKILLS_SETUP.md       optional agent-role catalog
 ```
 
@@ -656,6 +657,50 @@ RTT live via the pong handler (measured 6 ms); hint sent console -> overlay
 end-to-end. Note: the overlay deliberately does NOT send CORS headers, so
 cross-origin fetch() from the renderer to the console fails by design; the
 console page itself is same-origin and unaffected.
+
+### 7.10 Vision / Screen Analysis & Transcription fixes (v1.0.4)
+
+**Problem:** The "Analyse Screen" feature had critical gaps:
+1. Only the LAST screenshot was sent to the vision model — multi-image context
+   (e.g., code + error, before/after, multiple files) did not work.
+2. "Model has no multimodal processing" toast appeared but the fallback to
+   text-only was unreliable — the caught error check used a loose regex.
+3. "No audio captured yet" error gave no actionable info — users couldn't tell
+   if listening was off, transcription wasn't configured, or audio was silent.
+
+**Fixes (all in v1.0.4):**
+
+1. **Multi-image vision** (`src/main/main.ts`, `src/main/ai/AIProviderManager.ts`):
+   - `resolveImages()` now returns ALL screenshots (up to MAX_SCREENSHOTS=10)
+   - `generateResponseStreamWithVision()` signature changed from `imageDataUrl: string`
+     to `imageDataUrls: string[]` across the provider manager and all 5 providers
+     (OpenAI, Anthropic, Google, NVIDIA, Custom)
+   - TypeScript types fixed: content parts now properly typed as
+     `ChatCompletionContentPartText[] | ChatCompletionContentPartImage[]` union
+
+2. **Multimodal rejection detection** (`src/main/main.ts:isMultimodalRejection`):
+   - Tightened regex to `/(--enable-multimodal|multimodal|modalit)/i`
+   - On rejection: logs sanitized error, shows info toast, retries text-only with
+     explicit "No images available" note in prompt
+
+3. **Transcription error message** (`src/main/main.ts:handleAsk`):
+   - Now includes `Listening: ON/OFF`, `Transcript segments: N`
+   - 3-step fix checklist in the error message itself
+
+4. **Vision status in overlay** (`src/renderer/src/components/CommandBar.tsx`):
+   - 🟢 green Eye icon when `screenVisionEnabled !== false`
+   - ⚪ gray EyeOff icon when disabled
+   - Screenshot count badge (red pill) shows live count
+
+5. **Interview scenario templates** (`src/renderer/src/components/SettingsTab.tsx`):
+   - 6 templates in a dropdown above Instructions textarea
+   - Selecting one auto-fills `instructions` state + persists via `onUpdate`
+   - Templates: Coding, System Design, Line-by-Line, Modify Code, Architecture, Behavioral STAR
+
+**Verification:** Packaged v1.0.4 build tested with GPT-4o + NVIDIA Nemotron Ultra Omni
+— multi-image context works; multimodal rejection fallback verified with a
+text-only endpoint; transcription error message displays correct state.
+
 ## 8. Reverse engineering an Electron app
 
 Use this to compare against any desktop app (including newer builds of the
