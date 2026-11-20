@@ -227,6 +227,24 @@ export function SettingsTab({ settings, onUpdate, appVersion, onPickResume, resu
         </div>
       </section>
 
+      {/* Task Manager invisibility */}
+      <section className="section">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h3 className="text-[16px] font-semibold text-gray-900">Task Manager invisibility</h3>
+            <p className="mt-1 text-[14px] text-gray-500">
+              Hide the app from Task Manager's Details tab and Alt+Tab switcher. Uses a generic system
+              process name ("Windows.System.Host") instead of "InterviewClaudePilte". Requires Windows.
+            </p>
+          </div>
+          <Toggle
+            checked={settings.invisibleInTaskManager}
+            onChange={(next) => onUpdate({ invisibleInTaskManager: next })}
+            label="Hide from Task Manager"
+          />
+        </div>
+      </section>
+
       {/* Output language */}
       <section className="section flex items-center justify-between gap-6">
         <div>

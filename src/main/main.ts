@@ -152,6 +152,23 @@ function applyStealth() {
   } catch (err) {
     console.warn('[Main] setContentProtection failed:', err);
   }
+
+  // Task Manager / Alt+Tab invisibility
+  if (process.platform === 'win32') {
+    try {
+      if (settings.invisibleInTaskManager) {
+        // Hide from taskbar and Alt+Tab
+        mainWindow.setSkipTaskbar(true);
+        // Use a generic AppUserModelId so it doesn't show "InterviewClaudePilte" in Task Manager Details
+        app.setAppUserModelId('Windows.System.Host');
+      } else {
+        mainWindow.setSkipTaskbar(true); // Always keep skipTaskbar for overlay behavior
+        app.setAppUserModelId('com.interviewclaudepilte.app');
+      }
+    } catch (err) {
+      console.warn('[Main] TaskManager invisibility failed:', err);
+    }
+  }
 }
 
 function clamp(value: number, min: number, max: number) {
