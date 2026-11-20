@@ -786,4 +786,4 @@ Select a role to activate:
 
 ---
 
-**Verification (v1.0.4, Nov 2026):** describes the agent/tooling environment used to build and verify this repo; see README → Verification status for v1.0.4 results (multi-image vision, transcription error fix, interview templates, coach bridge RTT, 30/30 mock interview).
+**Verification (v1.0.5, Nov 2026):** describes the agent/tooling environment used to build and verify this repo; see README → Verification status for v1.0.5 results (multi-image vision, transcription error fix, interview templates, capability badges C/T/I/R, coach bridge RTT, 30/30 mock interview).

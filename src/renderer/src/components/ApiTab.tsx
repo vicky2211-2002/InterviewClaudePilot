@@ -36,6 +36,10 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
   const [customBaseUrl, setCustomBaseUrl] = useState(settings.customBaseUrl || '');
   const [customKey, setCustomKey] = useState(settings.customApiKey || '');
   const [customModel, setCustomModel] = useState('');
+  const [customCanCode, setCustomCanCode] = useState(true);
+  const [customCanText, setCustomCanText] = useState(true);
+  const [customCanImage, setCustomCanImage] = useState(false);
+  const [customCanReason, setCustomCanReason] = useState(false);
   const [status, setStatus] = useState('');
   const [testing, setTesting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -93,6 +97,10 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
       apiKey,
       baseUrl,
       enabled: true,
+      canCode: customCanCode,
+      canText: customCanText,
+      canImage: customCanImage,
+      canReason: customCanReason,
     };
 
     try {
@@ -105,6 +113,7 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
         setStatus(`Added and selected ${modelId}`);
       }
       setEditingId(null);
+      cancelEdit();
       refreshModels();
     } catch (error) {
       setStatus(`Failed — ${error instanceof Error ? error.message : String(error)}`);
@@ -129,6 +138,10 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
     setCustomBaseUrl(model.baseUrl || '');
     setCustomModel(model.model || '');
     setCustomKey(model.apiKey || '');
+    setCustomCanCode(model.canCode ?? true);
+    setCustomCanText(model.canText ?? true);
+    setCustomCanImage(model.canImage ?? false);
+    setCustomCanReason(model.canReason ?? false);
     setStatus(`Editing ${model.name}`);
   };
 
@@ -148,6 +161,10 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
     setCustomBaseUrl('');
     setCustomKey('');
     setCustomModel('');
+    setCustomCanCode(true);
+    setCustomCanText(true);
+    setCustomCanImage(false);
+    setCustomCanReason(false);
     setStatus('');
   };
 
@@ -315,6 +332,56 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
             <div className="mt-1 text-[12px] text-indigo-600">Editing {customModel} — Save to update, Cancel to discard</div>
           )}
 
+          {/* Model Capabilities */}
+          <div className="mt-3 p-3 rounded-md bg-gray-50 border border-gray-200">
+            <label className="block text-[12px] font-medium text-gray-700 mb-2">Model Capabilities</label>
+            <div className="flex flex-wrap gap-3">
+              <label className="flex items-center gap-1.5 text-[12px] text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={customCanCode}
+                  onChange={(e) => setCustomCanCode(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-emerald-500 rounded"
+                />
+                <span className="font-medium text-emerald-700">C</span>
+                <span className="text-gray-500">Code</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-[12px] text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={customCanText}
+                  onChange={(e) => setCustomCanText(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-blue-500 rounded"
+                />
+                <span className="font-medium text-blue-700">T</span>
+                <span className="text-gray-500">Text</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-[12px] text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={customCanImage}
+                  onChange={(e) => setCustomCanImage(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-purple-500 rounded"
+                />
+                <span className="font-medium text-purple-700">I</span>
+                <span className="text-gray-500">Image</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-[12px] text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={customCanReason}
+                  onChange={(e) => setCustomCanReason(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-amber-500 rounded"
+                />
+                <span className="font-medium text-amber-700">R</span>
+                <span className="text-gray-500">Reason</span>
+              </label>
+            </div>
+            <p className="mt-1.5 text-[10.5px] text-gray-500">
+              C = coding/refactoring · T = text generation · I = vision/multimodal · R = reasoning (chain-of-thought)
+            </p>
+          </div>
+
           {settings.customModels.length > 0 && (
             <div className="mt-4">
               <h4 className="text-[13px] font-medium text-gray-700">Saved Custom Models</h4>
@@ -322,7 +389,13 @@ export function ApiTab({ settings, onUpdate }: ApiTabProps) {
                 {settings.customModels.map((model) => (
                   <li key={model.id} className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white p-3">
                     <div className="min-w-0">
-                      <div className="truncate text-[13px] font-medium">{model.name}</div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="truncate text-[13px] font-medium">{model.name}</span>
+                        {model.canCode && <span className="cap-badge cap-code" title="Code">C</span>}
+                        {model.canText && <span className="cap-badge cap-text" title="Text">T</span>}
+                        {model.canImage && <span className="cap-badge cap-image" title="Image/Vision">I</span>}
+                        {model.canReason && <span className="cap-badge cap-reason" title="Reasoning">R</span>}
+                      </div>
                       <div className="truncate text-[11px] text-gray-500">{model.model}</div>
                       <div className="tip truncate text-[10px] text-gray-400" data-tip={model.baseUrl}>{model.baseUrl}</div>
                     </div>

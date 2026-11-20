@@ -33,6 +33,16 @@ renderer listener was a no-op; `Analyse Screen` still reads the array via
 Ported into InterviewClaudePilte for v1.0.1 (same tool in `tools/`, same cap) —
 re-verified in this repo (12 captures, 10 stick, tray restored).
 
+**InterviewClaudePilte v1.0.5 status (Nov 2026, supersedes 1.0.4):** Model capability badges + custom model validation.
+
+- **Capability badges (C/T/I/R):** Settings → API → Custom API now has four checkboxes when adding/editing a custom model:
+  - **C** (coding/refactoring) — emerald badge
+  - **T** (text generation/chat) — blue badge
+  - **I** (image/vision/multimodal) — purple badge
+  - **R** (reasoning/chain-of-thought) — amber badge
+  Any combination works (CT, CTI, CTIR, etc.). Badges display on the model card for instant recognition.
+- **Custom model validation:** `AIModel` type extended with `canCode`, `canText`, `canImage`, `canReason` booleans. Persisted in settings and shown as badges.
+
 **InterviewClaudePilte v1.0.4 status (Nov 2026, supersedes 1.0.3):** Major vision +
 transcription fixes + interview scenario templates.
 

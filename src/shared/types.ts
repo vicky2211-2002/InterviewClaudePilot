@@ -12,6 +12,11 @@ export interface AIModel {
   enabled: boolean;
   maxTokens?: number;
   temperature?: number;
+  // Model capabilities (user-declared)
+  canCode?: boolean;        // C - coding, code generation, refactoring
+  canText?: boolean;        // T - general text generation, chat
+  canImage?: boolean;       // I - image upload, vision, multimodal
+  canReason?: boolean;      // R - reasoning, chain-of-thought (optional)
 }
 
 export type AIProvider = 'openai' | 'anthropic' | 'google' | 'nvidia' | 'custom';

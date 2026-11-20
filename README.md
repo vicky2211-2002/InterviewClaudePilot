@@ -86,6 +86,11 @@ InterviewClaudePilte adds:
   six one-click templates (Coding, System Design, Line-by-Line, Modify Code,
   Architecture, Behavioral STAR) that auto-fill proven instructions for each
   interview format.
+- **(h) Model capability badges** — Settings → API → Custom API: when adding a custom model,
+  declare its capabilities with four checkboxes — **C** (coding/refactoring), **T** (text generation),
+  **I** (image/vision/multimodal), **R** (reasoning/chain-of-thought). Badges appear on the model card
+  (e.g., `C T I R`) so you instantly know what each endpoint can do. Works with any combination
+  (CT, CTI, CTIR, etc.).
 
 ## Configure the AI
 

@@ -226,4 +226,4 @@ button before an interview.*
 
 ---
 
-**Verification (v1.0.4, Nov 2026):** endpoints below are third-party configurations - verify keys/models in-app with the Test button. Offline, `tools/mock_provider.cjs` verifies streaming + **multi-image vision** paths; the full 3-round × 10-question mock interview passes (30/30 streamed answers, Nov 2026). v1.0.4: all 10 screenshots now sent to vision models; multimodal rejection fallback verified. Live paid-model verification remains user-side.
+**Verification (v1.0.5, Nov 2026):** endpoints below are third-party configurations - verify keys/models in-app with the Test button. Offline, `tools/mock_provider.cjs` verifies streaming + **multi-image vision** paths; the full 3-round × 10-question mock interview passes (30/30 streamed answers, Nov 2026). v1.0.4: all 10 screenshots now sent to vision models; multimodal rejection fallback verified. v1.0.5: **custom model capability badges (C/T/I/R)** added — when adding a custom endpoint, tick C (coding), T (text), I (image/vision), R (reasoning); badges display on model card for instant recognition. Live paid-model verification remains user-side.

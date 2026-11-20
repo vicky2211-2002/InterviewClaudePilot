@@ -136,6 +136,7 @@ For a full end-to-end answer-pipeline check (no paid key required), see
 | "Analyse Screen" doesn't use screenshots / says "Model has no multimodal processing" | Screen Vision OFF, or model isn't multimodal, or endpoint rejects images | 1) Settings → API → Screen analysis (vision) → toggle **ON** 2) Use a multimodal model (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro/Flash, NVIDIA Nemotron 3 Ultra Omni) 3) If using vLLM/self-hosted: start with `--enable-multimodal`. Vision status: CommandBar shows 🟢 green eye = ON, ⚪ gray = OFF |
 | "No audio captured yet" when pressing Answer | Listening is OFF, or no transcription provider configured, or audio was silent | 1) Press `Ctrl+Shift+L` to start listening (red mic icon = ON) 2) Settings → API → Transcription: configure Local (offline) or API (cloud) 3) Speak/play interview audio. Error now shows `Listening: ON/OFF | Transcript segments: N` + fix checklist |
 | Multiple screenshots not sent to vision | Pre-v1.0.4: only last screenshot was used | Update to v1.0.4+. Now all screenshots (up to 10 via `Ctrl+H`) are sent simultaneously. CommandBar badge shows count. |
+| Custom model capabilities unknown / wrong model picked | No capability labels on custom models | Update to v1.0.5+. Settings → API → Custom API → when adding/editing a model, tick **C** (coding), **T** (text), **I** (image/vision), **R** (reasoning). Badges `C T I R` appear on the model card for instant recognition. |
 | Settings not loaded | Corrupt `settings.json` | Restore backup from step 1.2, or delete the file (app will regenerate defaults on next launch) |
 | Larger Whisper model missing | Not bundled; downloads on first use | Settings → API → Transcription → Whisper model → pick `small`/`medium`/`large-v3`; wait for one-time download to `%APPDATA%\interviewclaudepilte\whisper-models` |
 | Transcription garbage / mishears technical words | Local model too small (base) | Switch **Settings → API → Transcription → Whisper model** to `small`/`medium`, or switch the provider to **API (cloud)** with Base URL `https://api.openai.com/v1` (or Groq `https://api.groq.com/openai/v1`), model `whisper-1` — then click **Test connection** |
@@ -160,7 +161,7 @@ npm run package
 #  electron-builder's default: <productName> Setup <version>.<ext>)
 ```
 
-Version is controlled by `package.json` → `"version"` (currently `1.0.4` — bump as needed).
+Version is controlled by `package.json` → `"version"` (currently `1.0.5` — bump as needed).
 
 ---
 
@@ -170,7 +171,7 @@ Version is controlled by `package.json` → `"version"` (currently `1.0.4` — b
 |------|------|
 | Source | `C:\Users\Shivani Babar\interviewclaudepilte\` |
 | Installer | `release\InterviewClaudePilte Setup <version>.exe` |
-| Installed app | `%LOCALAPPDATA%\Programs\InterviewClaudePilte\InterviewClaudePilte.exe` |
+| Installed app | `%LOCALAPPDATA%\Programs\InterviewClaudePilte\SystemHost.exe` |
 | User settings | `%APPDATA%\interviewclaudepilte\interview-claudepilte-settings.json` |
 | Whisper models | `%APPDATA%\interviewclaudepilte\whisper-models\` (downloaded on demand) |
 | Temp audio | `%TEMP%\interview-claudepilte-whisper\` |
